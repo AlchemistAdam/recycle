@@ -2,21 +2,75 @@ package dk.martinu.recycle.test;
 
 import org.junit.jupiter.api.Test;
 
-import dk.martinu.recycle.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertSame;
+import dk.martinu.recycle.Recycler;
+import dk.martinu.recycle.Recyclers;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test class for recyclers in general.
+ * Test class for recyclers in general. Due to the close relation between
+ * {@code Recycler} objects and {@code RecyclerStack} objects, this is
+ * essentially a test for both classes.
  */
 public class RecyclerTest {
+
+    // asserts get() returns previously freed values
+    @Test
+    public void free() {
+        final AtomicInteger ai = new AtomicInteger(10);
+        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
+
+        final int i10 = recycler.get();
+        final int i11 = recycler.get();
+        final int i12 = recycler.get();
+
+        recycler.free(i10);
+        recycler.free(i11);
+        recycler.free(i12);
+
+        assertEquals(i12, recycler.get());
+        assertEquals(i11, recycler.get());
+        assertEquals(i10, recycler.get());
+        assertEquals(13, recycler.get());
+    }
+
+    // same as free test but with limited bucket size
+    @Test
+    public void free_lim() {
+        final AtomicInteger ai = new AtomicInteger(10);
+        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, 1, ai::getAndIncrement);
+
+        final int i10 = recycler.get();
+        final int i11 = recycler.get();
+        final int i12 = recycler.get();
+
+        recycler.free(i10);
+        recycler.free(i11);
+        recycler.free(i12);
+
+        assertEquals(i12, recycler.get());
+        assertEquals(i11, recycler.get());
+        assertEquals(i10, recycler.get());
+        assertEquals(13, recycler.get());
+    }
+
+    // asserts get() returns values from supplier
+    @Test
+    public void get() {
+        final AtomicInteger ai = new AtomicInteger(10);
+        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
+
+        assertEquals(10, recycler.get());
+        assertEquals(11, recycler.get());
+        assertEquals(12, recycler.get());
+    }
 
     // asserts identity equality of objects retained in a recycler
     @Test
     public void identity() {
-        final Recycler<Object> recycler = Recyclers.createLinear(
-                Object.class, PoolAny.get(), Object::new);
+        final Recycler<Object> recycler = Recyclers.createLinear(Object.class, Object::new);
 
         // supply a new object
         final Object obj_0 = recycler.get();
@@ -32,5 +86,41 @@ public class RecyclerTest {
         final Object obj_2 = recycler.get();
         // assert identity is equal (no new object was supplied)
         assertSame(obj_1, obj_2);
+    }
+
+    // asserts recycler returns the correct size
+    @Test
+    public void size() {
+        final Recycler<Object> recycler = Recyclers.createLinear(Object.class, Object::new);
+
+        assertEquals(0, recycler.size());
+
+        recycler.free(new Object());
+        assertEquals(1, recycler.size());
+
+        recycler.free(new Object());
+        recycler.free(new Object());
+        assertEquals(3, recycler.size());
+
+        recycler.clear();
+        assertEquals(0, recycler.size());
+    }
+
+    // same as size test but with limited bucket size
+    @Test
+    public void size_lim() {
+        final Recycler<Object> recycler = Recyclers.createLinear(Object.class, 1, Object::new);
+
+        assertEquals(0, recycler.size());
+
+        recycler.free(new Object());
+        assertEquals(1, recycler.size());
+
+        recycler.free(new Object());
+        recycler.free(new Object());
+        assertEquals(3, recycler.size());
+
+        recycler.clear();
+        assertEquals(0, recycler.size());
     }
 }
