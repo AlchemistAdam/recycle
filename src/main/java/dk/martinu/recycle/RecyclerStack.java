@@ -18,7 +18,6 @@ import java.util.Objects;
  * @author Adam Martinu
  * @since 1.0
  */
-// TEST
 public class RecyclerStack<T> {
 
     /**
