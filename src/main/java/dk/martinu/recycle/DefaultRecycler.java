@@ -35,7 +35,9 @@ public class DefaultRecycler<T> implements Recycler<T> {
      * Constructs a new recycler with the specified array producer and element
      * supplier.
      *
-     * DOC parameters
+     * @param producer producer of bucket arrays
+     * @param policy   determines how elements are retained
+     * @param supplier supplier for providing elements when the recycler
      * @throws NullPointerException if {@code producer}, {@code policy} or
      *                              {@code supplier} is {@code null}
      */

@@ -4,8 +4,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Abstract class to determine how to retain elements in {@link RecyclerStack}
- * objects. Several default implementations are provided by this API:
+ * Abstract class to determine how to retain elements in
+ * {@link Recycler}/{@link RecyclerStack} objects. Several default
+ * implementations are provided by this API:
  * <ul>
  *     <li>{@link PoolNone}</li>
  *     <li>{@link PoolAny}</li>

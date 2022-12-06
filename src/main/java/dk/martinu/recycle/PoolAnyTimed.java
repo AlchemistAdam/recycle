@@ -7,8 +7,8 @@ import java.util.function.IntUnaryOperator;
 
 /**
  * A {@code RetentionPolicy} that does not limit the amount of elements that
- * can be retained (pushed) in the stack, but disposes elements at fixed time
- * intervals.
+ * can be retained (pushed) in the stack, but disposes elements a a fixed time
+ * interval.
  *
  * @author Adam Martinu
  * @see #PoolAnyTimed(long, IntUnaryOperator)

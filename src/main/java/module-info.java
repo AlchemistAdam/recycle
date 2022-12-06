@@ -1,3 +1,6 @@
+/**
+ * Provides the Recycler API.
+ */
 module dk.martinu.recycle {
 
     requires java.base;
