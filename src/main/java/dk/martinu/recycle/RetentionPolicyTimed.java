@@ -30,6 +30,10 @@ import java.util.function.IntUnaryOperator;
  *     <li>{@link PoolMaxTimed}</li>
  * </ul>
  * Extending this class allows for custom behavior of retaining elements.
+ * <p>
+ * <b>NOTE:</b> this class modifies the recycler stack asynchronously.
+ * Instances of this class should only be used with recyclers that synchronize
+ * access to their stack, such as {@link DefaultRecycler}.
  *
  * @author Adam Martinu
  * @since 1.0

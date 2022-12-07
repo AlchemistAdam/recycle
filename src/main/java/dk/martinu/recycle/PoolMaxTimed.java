@@ -26,6 +26,10 @@ import java.util.function.IntUnaryOperator;
  * A {@code RetentionPolicy} that limits the amount of elements that
  * can be retained (pushed) in the stack, and disposes elements at a fixed time
  * interval.
+ * <p>
+ * <b>NOTE:</b> this class modifies the recycler stack asynchronously.
+ * Instances of this class should only be used with recyclers that synchronize
+ * access to their stack, such as {@link DefaultRecycler}.
  *
  * @author Adam Martinu
  * @see #PoolMaxTimed(int, long, IntUnaryOperator)

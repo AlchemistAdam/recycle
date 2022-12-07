@@ -24,7 +24,7 @@ import java.util.function.IntUnaryOperator;
 
 /**
  * Daemon {@code Thread} implementation used by retention policies that dispose
- * elements at fixed intervals.
+ * elements at a fixed time interval.
  *
  * @author Adam Martinu
  * @see RetentionPolicyTimed
