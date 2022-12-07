@@ -17,6 +17,8 @@
 
 package dk.martinu.recycle;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * The base interface of a recycler. Recyclers are similar to stacks; both are
  * collections of elements, and allow the collection to be modified with
