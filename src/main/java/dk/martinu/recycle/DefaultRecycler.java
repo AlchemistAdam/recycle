@@ -23,12 +23,11 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Basic implementation of a {@link Recycler} that provides functionality for
- * the {@code free} and {@code get} methods.
+ * Basic implementation of a {@link Recycler} that delegates most method calls
+ * to its underlying stack, except {@code get} which returns an element from
+ * the supplier when the stack is empty
  * <p>
- * The {@link Recyclers} factory class can create simple recyclers that fit
- * most use cases. Instantiate recyclers from this class directly when finer
- * control and more advanced behaviour is required.
+ * This implementation is thread safe and can be used concurrently.
  *
  * @param <T> the element type
  * @author Adam Martinu
@@ -69,7 +68,9 @@ public class DefaultRecycler<T> implements Recycler<T> {
      */
     @Override
     public void clear() {
-        stack.clear();
+        synchronized (stack) {
+            stack.clear();
+        }
     }
 
     /**
@@ -77,7 +78,9 @@ public class DefaultRecycler<T> implements Recycler<T> {
      */
     @Override
     public void free(final T element) {
-        stack.push(element);
+        synchronized (stack) {
+            stack.push(element);
+        }
     }
 
     /**
@@ -85,10 +88,12 @@ public class DefaultRecycler<T> implements Recycler<T> {
      */
     @Override
     public T get() {
-        if (stack.isEmpty())
-            return supplier.get();
-        else
-            return stack.pop();
+        synchronized (stack) {
+            if (stack.isEmpty())
+                return supplier.get();
+            else
+                return stack.pop();
+        }
     }
 
     /**
@@ -96,6 +101,8 @@ public class DefaultRecycler<T> implements Recycler<T> {
      */
     @Override
     public int size() {
-        return stack.size();
+        synchronized (stack) {
+            return stack.size();
+        }
     }
 }
