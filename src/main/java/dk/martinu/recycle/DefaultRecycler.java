@@ -17,6 +17,7 @@
 
 package dk.martinu.recycle;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
@@ -99,6 +100,17 @@ public class DefaultRecycler<T> implements Recycler<T> {
     /**
      * {@inheritDoc}
      */
+    @Contract(pure = true)
+    @NotNull
+    @Override
+    public RecyclerStack<?> getStack() {
+        return stack;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Contract(pure = true)
     @Override
     public int size() {
         synchronized (stack) {

@@ -17,6 +17,7 @@
 
 package dk.martinu.recycle;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -78,7 +79,15 @@ public interface Recycler<T> {
     T get();
 
     /**
+     * Returns the underlying stack this recycler operates on.
+     */
+    @Contract(pure = true)
+    @NotNull
+    RecyclerStack<?> getStack();
+
+    /**
      * Returns the number of available elements in the recycler.
      */
+    @Contract(pure = true)
     int size();
 }
