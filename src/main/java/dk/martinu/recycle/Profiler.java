@@ -6,19 +6,70 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.stream.Stream;
 
-// DOC
 // TEST
+
+/**
+ * Utility class to profile {@link Recycler} instances. This class implements
+ * {@code Recycler} itself and simply delegates method calls to the recycler
+ * being profiled. To profile a recycler, simply wrap it in a profiler:
+ * <pre>
+ *     Recycler r = new Profiler(new MyRecycler());
+ * </pre>
+ * You can then continue to use the {@code Recycler} instance as usual.
+ * <p>
+ * Profilers are also daemon threads, and capture <i>snapshots</i> of gathered
+ * statistics at a fixed time interval which can be passed to the constructor.
+ * If no time interval is given, then a default time interval of 10 seconds is
+ * used. A snapshot is an array of {@code int} that contains the following:
+ * <ol start=0>
+ *     <li>Number of elements in the recycler stack</li>
+ *     <li>Number of buckets in the recycler stack</li>
+ *     <li>Number of times {@link Recycler#free(Object)} was called</li>
+ *     <li>Number of times {@link Recycler#get()} was called</li>
+ *     <li>Number of elements that were recycled</li>
+ * </ol>
+ * The constant array indices {@code N_ELEMENTS}, {@code N_BUCKETS},
+ * {@code N_FREE}, {@code N_GET} and {@code N_RECYCLED} can be used to access
+ * these numbers from the snapshot array.
+ *
+ * @author Adam Martinu
+ * @since 1.0
+ */
 public class Profiler<T> extends Thread implements Recycler<T> {
 
-    // DOC
+    /**
+     * Array index to retrieve the number of elements from a snapshot.
+     *
+     * @see #getSnapshots()
+     */
     public static final int N_ELEMENTS = 0;
-    // DOC
+    /**
+     * Array index to retrieve the number of buckets from a snapshot.
+     *
+     * @see #getSnapshots()
+     */
     public static final int N_BUCKETS = 1;
-    // DOC
+    /**
+     * Array index to retrieve the number of {@link Recycler#free(Object)}
+     * method calls from a snapshot.
+     *
+     * @see #getSnapshots()
+     */
     public static final int N_FREE = 2;
-    // DOC
+    /**
+     * Array index to retrieve the number of {@link Recycler#get()} method
+     * calls from a snapshot.
+     *
+     * @see #getSnapshots()
+     */
     public static final int N_GET = 3;
-    // DOC
+    /**
+     * Array index to retrieve the number of times an element was recycled
+     * ({@link Recycler#get()} was called while the stack had elements) from a
+     * snapshot.
+     *
+     * @see #getSnapshots()
+     */
     public static final int N_RECYCLED = 4;
 
     /**
@@ -129,6 +180,9 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         return recycler.getStack();
     }
 
+    /**
+     * Gathers snapshots at a fixed time interval.
+     */
     @Override
     public void run() {
         // timestamp of the last snapshot
@@ -166,10 +220,13 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         return recycler.size();
     }
 
+    /**
+     * Container class for storing statistics during a profiling session.
+     */
     public static class Session {
 
         /**
-         * The stack this session is created for.
+         * The recycler stack this session is created for.
          */
         @NotNull
         protected final RecyclerStack<?> stack;
@@ -179,11 +236,11 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         @NotNull
         protected RecyclerStack.Bucket<?> bucket;
         /**
-         * Number of elements in the stack.
+         * Number of elements in the recycler stack.
          */
         protected int nElements;
         /**
-         * Number of buckets in the stack.
+         * Number of buckets in the recycler stack.
          */
         protected int nBuckets;
         /**
@@ -198,20 +255,23 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         protected int nGet;
         /**
          * Number of times an element was recycled ({@link Recycler#get()} was
-         * called while stack had elements) since the last snapshot was taken.
+         * called while the recycler stack had elements) since the last snapshot
+         * was taken.
          */
         protected int nRecycled;
 
         /**
          * Constructs a new session for the specified recycler stack.
-         * 
+         *
          * @throws NullPointerException if {@code stack} is {@code null}
          */
         public Session(@NotNull final RecyclerStack<?> stack) {
             this.stack = Objects.requireNonNull(stack, "stack is null");
+
+            // initial number of elements
             nElements = stack.size();
 
-            // count number of buckets
+            // count initial number of buckets
             nBuckets = 1;
             bucket = stack.bucket;
             while (bucket.next != null) {
@@ -226,7 +286,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         /**
          * Creates a snapshot of this session and returns it. Use the constant
          * array indices in {@link Profiler} to retrieve the respective
-         * numbers from the returned array.
+         * numbers from the returned snapshot array.
          */
         @Contract(value = "-> new")
         public synchronized int[] createSnapshot() {
@@ -243,7 +303,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         }
 
         /**
-         * Called whenever {@link Recycler#free(Object)} is called.
+         * Called whenever {@link Profiler#free(Object)} is called.
          */
         public synchronized void incrementFree() {
             nFree++;
@@ -255,7 +315,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         }
 
         /**
-         * Called whenever {@link Recycler#get()} is called.
+         * Called whenever {@link Profiler#get()} is called.
          */
         public synchronized void incrementGet() {
             nGet++;
