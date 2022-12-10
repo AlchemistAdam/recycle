@@ -137,6 +137,10 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     public void free(final T element) {
         recycler.free(element);
         session.incrementFree();
+        synchronized (this) {
+            if (getState() == State.NEW)
+                start();
+        }
     }
 
     /**
@@ -146,6 +150,10 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     public T get() {
         final T rv = recycler.get();
         session.incrementGet();
+        synchronized (this) {
+            if (getState() == State.NEW)
+                start();
+        }
         return rv;
     }
 
@@ -195,7 +203,9 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         while (true) {
             delta = System.currentTimeMillis() - timestamp;
             if (delta >= timeMs) {
-                snapshots.add(session.createSnapshot());
+                synchronized (this) {
+                    snapshots.add(session.createSnapshot());
+                }
                 timestamp = System.currentTimeMillis();
             }
             // wait remaining time
