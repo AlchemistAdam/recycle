@@ -3,8 +3,8 @@ package dk.martinu.recycle;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 // DOC
 // TEST
@@ -96,6 +96,27 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         final T rv = recycler.get();
         session.incrementGet();
         return rv;
+    }
+
+    /**
+     * Returns a stream of all snapshots gathered in this session.
+     */
+    @Contract(value = "-> new", pure = true)
+    @NotNull
+    public synchronized Stream<int[]> getSnapshots() {
+        return snapshots.stream();
+    }
+
+    /**
+     * Returns an unmodifiable list that reads through to this session's list
+     * of snapshots. Note that the backing list is updated asynchronously when
+     * new snapshots are captured, and as such access to the returned list
+     * should be synchronized on this {@code Profiler} instance.
+     */
+    @Contract(value = "-> new", pure = true)
+    @NotNull
+    public List<int[]> getSnapshotsList() {
+        return Collections.unmodifiableList(snapshots);
     }
 
     /**
