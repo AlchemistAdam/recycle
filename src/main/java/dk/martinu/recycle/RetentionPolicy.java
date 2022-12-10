@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Adam Martinu
  * @since 1.0
  */
-public abstract class RetentionPolicy {
+public interface  RetentionPolicy {
 
     /**
      * Returns {@code true} if an element can be pushed onto the stack,
@@ -45,21 +45,21 @@ public abstract class RetentionPolicy {
      * {@link RecyclerStack#push(Object)} to determine if the element should be
      * pushed or not.
      */
-    public abstract boolean canPush();
+    boolean canPush();
 
     /**
      * Event method called by {@link RecyclerStack} whenever an element is
      * popped. Does nothing by default.
      */
     @Contract(pure = true)
-    public void onPop() { }
+    default void onPop() { }
 
     /**
      * Event method called by {@link RecyclerStack} whenever an element
      * is pushed. Does nothing by default.
      */
     @Contract(pure = true)
-    public void onPush() { }
+    default void onPush() { }
 
     /**
      * Called by {@link RecyclerStack} when constructing an instance or setting
@@ -69,7 +69,7 @@ public abstract class RetentionPolicy {
      * @see RecyclerStack#setRetentionPolicy(RetentionPolicy)
      */
     @Contract(pure = true)
-    protected void install(@NotNull final RecyclerStack<?> stack) { }
+    default void install(@NotNull final RecyclerStack<?> stack) { }
 
     /**
      * Called by {@link RecyclerStack} when setting a new retention policy.
@@ -78,5 +78,5 @@ public abstract class RetentionPolicy {
      * @see RecyclerStack#setRetentionPolicy(RetentionPolicy)
      */
     @Contract(pure = true)
-    protected void uninstall() { }
+    default void uninstall() { }
 }

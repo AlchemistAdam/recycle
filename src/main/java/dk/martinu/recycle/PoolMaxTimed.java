@@ -96,7 +96,7 @@ public class PoolMaxTimed extends RetentionPolicyTimed {
      * element counter.
      */
     @Override
-    protected void uninstall() {
+    public void uninstall() {
         super.uninstall();
         count = 0;
     }

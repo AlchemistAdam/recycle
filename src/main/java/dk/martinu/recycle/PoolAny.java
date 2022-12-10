@@ -27,7 +27,7 @@ import org.jetbrains.annotations.*;
  * @author Adam Martinu
  * @since 1.0
  */
-public class PoolAny extends RetentionPolicy {
+public class PoolAny implements RetentionPolicy {
 
     /**
      * Private singleton.

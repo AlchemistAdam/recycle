@@ -38,7 +38,7 @@ import java.util.function.IntUnaryOperator;
  * @author Adam Martinu
  * @since 1.0
  */
-public abstract class RetentionPolicyTimed extends RetentionPolicy {
+public abstract class RetentionPolicyTimed implements RetentionPolicy {
 
     /**
      * Time interval in milliseconds to wait between disposals.
@@ -74,24 +74,24 @@ public abstract class RetentionPolicyTimed extends RetentionPolicy {
 
     /**
      * Constructs a new {@link Disposer} for the specified stack and starts it.
+     * Subclasses overriding this method must call {@code super}.
      *
      * @param stack the stack this retention policy is being installed for
      */
     @Contract()
     @Override
-    protected void install(@NotNull final RecyclerStack<?> stack) {
-        super.install(stack);
+    public void install(@NotNull final RecyclerStack<?> stack) {
         disposer = new Disposer(stack, timeMs, operator);
         disposer.start();
     }
 
     /**
-     * Terminates this retention policy's {@link Disposer}.
+     * Terminates this retention policy's {@link Disposer}. Subclasses
+     * overriding this method must call {@code super}.
      */
     @Contract()
     @Override
-    protected void uninstall() {
-        super.uninstall();
+    public void uninstall() {
         if (disposer != null) {
             disposer.terminate();
             disposer = null;

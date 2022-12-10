@@ -27,7 +27,7 @@ import org.jetbrains.annotations.Contract;
  * @see #PoolMax(int)
  * @since 1.0
  */
-public class PoolMax extends RetentionPolicy {
+public class PoolMax implements RetentionPolicy {
 
     /**
      * Maximum number of elements that can be retained
@@ -80,8 +80,7 @@ public class PoolMax extends RetentionPolicy {
      * Resets the element counter.
      */
     @Override
-    protected void uninstall() {
-        super.uninstall();
+    public void uninstall() {
         count = 0;
     }
 }

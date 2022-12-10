@@ -28,7 +28,7 @@ import org.jetbrains.annotations.*;
  * @author Adam Martinu
  * @since 1.0
  */
-public class PoolNone extends RetentionPolicy {
+public class PoolNone implements RetentionPolicy {
 
     /**
      * Private singleton.
@@ -72,8 +72,7 @@ public class PoolNone extends RetentionPolicy {
      */
     @Contract()
     @Override
-    protected void install(@NotNull final RecyclerStack<?> stack) {
-        super.install(stack);
+    public void install(@NotNull final RecyclerStack<?> stack) {
         // remove any pooled elements
         stack.clear();
     }
