@@ -122,7 +122,9 @@ public class Profiler<T> extends Thread implements Recycler<T> {
 
     /**
      * Constructs a new profiler wrapped around the specified recycler with
-     * the specified time interval in milliseconds between snapshots.
+     * the specified time interval in milliseconds between snapshots. This
+     * profiler will not capture any snapshots if {@code timeMs} is equal to
+     * {@code 0} (see {@link #createSnapshot()}).
      *
      * @param timeMs   time in milliseconds between snapshots
      * @param recycler the recycler to profile
@@ -201,10 +203,14 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     }
 
     /**
-     * Gathers snapshots at a fixed time interval.
+     * Captures snapshots at a fixed time interval. Does nothing if
+     * {@link #timeMs} is equal to {@code 0}.
      */
     @Override
     public void run() {
+        if (timeMs == 0)
+            return;
+
         // timestamp of the last snapshot
         long timestamp = System.currentTimeMillis();
         // difference between current time and timestamp
