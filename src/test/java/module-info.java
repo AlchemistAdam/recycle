@@ -18,7 +18,11 @@
 module dk.martinu.recycle.test {
 
     requires org.junit.jupiter.api;
+    requires org.junit.jupiter.params;
     requires dk.martinu.recycle;
 
+    requires static org.jetbrains.annotations;
+
     exports dk.martinu.recycle.test;
+    opens dk.martinu.recycle.test;
 }
