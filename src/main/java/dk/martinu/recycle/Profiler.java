@@ -175,23 +175,18 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     }
 
     /**
-     * Returns a stream of all snapshots gathered in this session.
+     * Returns an unmodifiable list that reads through to this profiler's list
+     * of snapshots. The constant array indices {@code N_ELEMENTS},
+     * {@code N_BUCKETS}, {@code N_FREE}, {@code N_GET} and {@code N_RECYCLED}
+     * can be used to access the numbers from the snapshot array.
+     * <p>
+     * <b>NOTE:</b> the backing list is updated asynchronously when new
+     * snapshots are captured, and as such access to the returned list should
+     * be synchronized on this {@code Profiler} instance.
      */
     @Contract(value = "-> new", pure = true)
     @NotNull
-    public synchronized Stream<int[]> getSnapshots() {
-        return snapshots.stream();
-    }
-
-    /**
-     * Returns an unmodifiable list that reads through to this session's list
-     * of snapshots. Note that the backing list is updated asynchronously when
-     * new snapshots are captured, and as such access to the returned list
-     * should be synchronized on this {@code Profiler} instance.
-     */
-    @Contract(value = "-> new", pure = true)
-    @NotNull
-    public List<int[]> getSnapshotsList() {
+    public List<int[]> getSnapshots() {
         return Collections.unmodifiableList(snapshots);
     }
 
