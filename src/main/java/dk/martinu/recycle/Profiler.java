@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 // TEST
 
@@ -34,10 +33,11 @@ import java.util.stream.Stream;
  * </pre>
  * You can then continue to use the {@code Recycler} instance as usual.
  * <p>
- * Profilers are also daemon threads, and capture <i>snapshots</i> of gathered
- * statistics at a fixed time interval which can be passed to the constructor.
- * If no time interval is given, then a default time interval of 10 seconds is
- * used. A snapshot is an array of {@code int} that contains the following:
+ * Profilers are also daemon threads, and capture snapshots of gathered
+ * statistics asynchronously at a fixed time interval which can be passed to
+ * the constructor. Asynchronous capturing of snapshots is disabled if a time
+ * interval of {@code 0} is used. A snapshot is an {@code int} array that
+ * contains the following:
  * <ol start=0>
  *     <li>Number of elements in the recycler stack</li>
  *     <li>Number of buckets in the recycler stack</li>
@@ -55,36 +55,39 @@ import java.util.stream.Stream;
 public class Profiler<T> extends Thread implements Recycler<T> {
 
     /**
-     * Array index to retrieve the number of elements from a snapshot.
+     * Array index to retrieve the number of elements in the recycler stack.
      *
+     * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_ELEMENTS = 0;
     /**
-     * Array index to retrieve the number of buckets from a snapshot.
+     * Array index to retrieve the number of buckets in the recycler stack.
      *
+     * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_BUCKETS = 1;
     /**
-     * Array index to retrieve the number of {@link Recycler#free(Object)}
-     * method calls from a snapshot.
+     * Array index to retrieve the number of times
+     * {@link Recycler#free(Object)} was called.
      *
+     * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_FREE = 2;
     /**
-     * Array index to retrieve the number of {@link Recycler#get()} method
-     * calls from a snapshot.
+     * Array index to retrieve the number of times {@link Recycler#get()} was
+     * called.
      *
+     * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_GET = 3;
     /**
-     * Array index to retrieve the number of times an element was recycled
-     * ({@link Recycler#get()} was called while the stack had elements) from a
-     * snapshot.
+     * Array index to retrieve the number of times an element was recycled.
      *
+     * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_RECYCLED = 4;
