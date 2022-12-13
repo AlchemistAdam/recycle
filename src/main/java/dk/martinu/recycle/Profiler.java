@@ -150,6 +150,24 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     }
 
     /**
+     * Creates a snapshot and returns it. The constant array indices
+     * {@code N_ELEMENTS}, {@code N_BUCKETS}, {@code N_FREE}, {@code N_GET} and
+     * {@code N_RECYCLED} can be used to access the numbers from the snapshot
+     * array.
+     * <p>
+     * <b>NOTE:</b> this method should only be used when snapshot captures by
+     * this profiler is disabled ({@code timeMs} is set to {@code 0}) and
+     * statistics must be gathered manually.
+     *
+     * @return a new snapshot
+     * @see #Profiler(long, Recycler)
+     */
+    @Contract(value = "-> new")
+    public synchronized int[] createSnapshot() {
+        return session.createSnapshot();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
