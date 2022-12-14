@@ -19,7 +19,7 @@ package dk.martinu.recycle.test;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -35,20 +35,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 /**
- * Test class for recyclers in general. Due to the close relation between
- * {@code Recycler} objects and {@code RecyclerStack} objects, this is
- * essentially a test for both classes.
+ * Test class for recyclers.
  */
-//@TestInstance(Lifecycle.PER_CLASS) TODO remove or uncomment
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@DisplayName("Recycler")
 public class RecyclerTest {
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("empty after clear")
-    void emptyAfterClear(@NotNull final Recycler<Object> recycler) {
-        recycler.free(new Object());
-        recycler.free(new Object());
-        recycler.free(new Object());
+    @DisplayName("is empty after clear")
+    void emptyAfterClear(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
+        recycler.free(0);
+        recycler.free(0);
         assertNotEquals(0, recycler.size());
 
         recycler.clear();
@@ -57,65 +56,47 @@ public class RecyclerTest {
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("empty after clear (limited bucket size)")
-    void emptyAfterClear_lim(@NotNull final Recycler<Object> recycler) {
-        recycler.free(new Object());
-        recycler.free(new Object());
-        recycler.free(new Object());
+    @DisplayName("is empty after clear (limited bucket size)")
+    void emptyAfterClear_lim(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
+        recycler.free(0);
+        recycler.free(0);
         assertNotEquals(0, recycler.size());
 
         recycler.clear();
         assertEquals(0, recycler.size());
     }
 
-    @Test
-    @DisplayName("get value from stack")
-    void getFromStack() {
-        final AtomicInteger ai = new AtomicInteger(10);
-        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerProvider.class)
+    @DisplayName("can get values from stack")
+    void getFromStack(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
+        recycler.free(1);
+        recycler.free(2);
 
-        final int i0 = ai.getAndIncrement();
-        final int i1 = ai.getAndIncrement();
-        final int i2 = ai.getAndIncrement();
-        assertNotEquals(i0, i1);
-        assertNotEquals(i0, i2);
-        assertNotEquals(i1, i2);
-
-        recycler.free(i0);
-        recycler.free(i1);
-        recycler.free(i2);
-        assertEquals(i2, recycler.get());
-        assertEquals(i1, recycler.get());
-        assertEquals(i0, recycler.get());
+        assertEquals(2, recycler.get());
+        assertEquals(1, recycler.get());
+        assertEquals(0, recycler.get());
     }
 
-    @Test
-    @DisplayName("get value from stack (limited bucket size)")
-    void getFromStack_lim() {
-        final AtomicInteger ai = new AtomicInteger(0);
-        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, 1, ai::getAndIncrement);
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerProvider.class)
+    @DisplayName("can get values from stack (limited bucket size)")
+    void getFromStack_lim(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
+        recycler.free(1);
+        recycler.free(2);
 
-        final int i0 = ai.getAndIncrement();
-        final int i1 = ai.getAndIncrement();
-        final int i2 = ai.getAndIncrement();
-        assertNotEquals(i0, i1);
-        assertNotEquals(i0, i2);
-        assertNotEquals(i1, i2);
-
-        recycler.free(i0);
-        recycler.free(i1);
-        recycler.free(i2);
-        assertEquals(i2, recycler.get());
-        assertEquals(i1, recycler.get());
-        assertEquals(i0, recycler.get());
+        assertEquals(2, recycler.get());
+        assertEquals(1, recycler.get());
+        assertEquals(0, recycler.get());
     }
 
-    @Test
-    @DisplayName("get value from supplier")
-    void getFromSupplier() {
-        final AtomicInteger ai = new AtomicInteger(0);
-        final Recycler<Integer> recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
-
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerProvider.class)
+    @DisplayName("can get values from supplier")
+    void getFromSupplier(@NotNull final Recycler<Integer> recycler) {
         assertEquals(0, recycler.get());
         assertEquals(1, recycler.get());
         assertEquals(2, recycler.get());
@@ -123,63 +104,42 @@ public class RecyclerTest {
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("get value from supplier and stack")
-    void getFromSupplierAndStack(@NotNull final Recycler<Object> recycler) {
-        final Object obj0 = recycler.get();
-        final Object obj1 = recycler.get();
-        final Object obj2 = recycler.get();
-
-        assertNotEquals(obj0, obj1);
-        assertNotEquals(obj0, obj2);
-        assertNotEquals(obj1, obj2);
-
-        recycler.free(obj0);
-        recycler.free(obj1);
-        recycler.free(obj2);
-
-        assertEquals(obj2, recycler.get());
-        assertEquals(obj1, recycler.get());
-        assertEquals(obj0, recycler.get());
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is empty when new")
-    void isEmpty(@NotNull final Recycler<Object> recycler) {
+    void isEmpty(@NotNull final Recycler<Integer> recycler) {
         assertEquals(0, recycler.size());
     }
 
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("not empty after pushing elements")
-    void notEmpty(@NotNull final Recycler<Object> recycler) {
-        recycler.free(new Object());
+    @DisplayName("is not empty after pushing elements")
+    void notEmpty(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
         assertEquals(1, recycler.size());
 
-        recycler.free(new Object());
+        recycler.free(0);
         assertEquals(2, recycler.size());
 
-        recycler.free(new Object());
+        recycler.free(0);
         assertEquals(3, recycler.size());
     }
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("not empty after pushing elements (limited bucket size)")
-    void notEmpty_lim(@NotNull final Recycler<Object> recycler) {
-        recycler.free(new Object());
+    @DisplayName("is not empty after pushing elements (limited bucket size)")
+    void notEmpty_lim(@NotNull final Recycler<Integer> recycler) {
+        recycler.free(0);
         assertEquals(1, recycler.size());
 
-        recycler.free(new Object());
+        recycler.free(0);
         assertEquals(2, recycler.size());
 
-        recycler.free(new Object());
+        recycler.free(0);
         assertEquals(3, recycler.size());
     }
 
     /**
-     * {@code Recycler} provider for test methods.
+     * {@code Recycler<Integer>} argument provider for test methods.
      */
     static class RecyclerProvider implements ArgumentsProvider {
 
@@ -194,10 +154,11 @@ public class RecyclerTest {
         public Stream<? extends Arguments> provideArguments(@NotNull final ExtensionContext context) {
             final String methodName = context.getTestMethod().orElseThrow().getName();
             final Recycler<?> recycler;
+            final AtomicInteger ai = new AtomicInteger();
             if (methodName.endsWith("_lim"))
-                recycler = Recyclers.createLinear(Object.class, 1, Object::new);
+                recycler = Recyclers.createLinear(Integer.class, 1, ai::getAndIncrement);
             else
-                recycler = Recyclers.createLinear(Object.class, Object::new);
+                recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
 
             return Stream.of(recycler).map(Arguments::of);
         }
