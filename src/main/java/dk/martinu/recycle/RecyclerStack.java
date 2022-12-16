@@ -55,7 +55,11 @@ public class RecyclerStack<T> {
     /**
      * Index of the next array element in the current bucket.
      */
-    protected int cursor;
+    protected int cursor = 0;
+    /**
+     * Number of buckets in the stack.
+     */
+    protected int bucketCount = 0;
 
     /**
      * Creates a new {@code RecyclerStack} object that uses the specified
@@ -87,6 +91,7 @@ public class RecyclerStack<T> {
             if (cursor == 0) {
                 bucket = bucket.next;
                 cursor = bucket.array.length;
+                bucketCount--;
             }
 
             // empty bucket
@@ -120,6 +125,7 @@ public class RecyclerStack<T> {
             if (bucket.next != null) {
                 bucket = bucket.next;
                 cursor = bucket.array.length;
+                bucketCount--;
             }
             else
                 throw new NoSuchElementException("stack is empty");
@@ -172,6 +178,7 @@ public class RecyclerStack<T> {
             if (cursor == 0) {
                 bucket = bucket.next;
                 cursor = bucket.array.length;
+                bucketCount--;
             }
 
             // number of elements to remove from bucket
