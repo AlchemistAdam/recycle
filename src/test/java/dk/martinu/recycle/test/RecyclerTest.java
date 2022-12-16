@@ -148,7 +148,7 @@ public class RecyclerTest {
          * if the test method's name ends in {@code "_lim"}, otherwise the
          * default bucket size is used.
          *
-         * @see Recyclers#createLinear(Class, Supplier)
+         * @see Recyclers#createConstant(Class, Supplier)
          */
         @Override
         public Stream<? extends Arguments> provideArguments(@NotNull final ExtensionContext context) {
