@@ -74,7 +74,7 @@ public class RecyclerStack<T> {
     public RecyclerStack(@NotNull final ArrayProducer<T> producer, @NotNull final RetentionPolicy policy) {
         this.producer = Objects.requireNonNull(producer, "producer is null");
         this.policy = Objects.requireNonNull(policy, "policy is null");
-        bucket = new Bucket<>(null, producer.get());
+        bucket = new Bucket<>(null, producer.get(bucketCount++));
 
         policy.install(this);
     }
@@ -154,7 +154,7 @@ public class RecyclerStack<T> {
 
             // allocate new bucket if current is full
             if (cursor == bucket.array.length) {
-                bucket = new Bucket<>(bucket, producer.get());
+                bucket = new Bucket<>(bucket, producer.get(bucketCount++));
                 cursor = 0;
             }
 

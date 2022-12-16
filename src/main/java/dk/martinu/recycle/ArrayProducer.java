@@ -30,5 +30,5 @@ import org.jetbrains.annotations.NotNull;
 public interface ArrayProducer<T> {
 
     @NotNull
-    T[] get();
+    T[] get(final int x);
 }

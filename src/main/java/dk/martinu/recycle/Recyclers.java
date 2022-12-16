@@ -166,10 +166,10 @@ public class Recyclers {
         /**
          * Returns a new array with a length equal to {@link #bucketSize}.
          */
-        @Contract(value = "-> new", pure = true)
+        @Contract(value = "_ -> new", pure = true)
         @NotNull
         @Override
-        public T[] get() {
+        public T[] get(final int x) {
             //noinspection unchecked
             return (T[]) Array.newInstance(componentType, bucketSize);
         }
