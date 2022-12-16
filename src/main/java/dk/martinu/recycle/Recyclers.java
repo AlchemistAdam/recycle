@@ -24,8 +24,6 @@ import java.lang.reflect.Array;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-// TODO implement exponential recycler
-
 /**
  * Static factory class for creating various {@link Recycler} instances.
  * <p>
@@ -43,14 +41,14 @@ import java.util.function.Supplier;
 public class Recyclers {
 
     /**
-     * Returns a new recycler that grows linearly, has a bucket size of
-     * {@code 128} and uses a {@link PoolAny} retention policy.
+     * Returns a new recycler with a bucket size of {@code 128} and a
+     * {@link PoolAny} retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param supplier      supplier for providing elements when the recycler
      *                      is empty.
      * @param <T>           the element type
-     * @return a new recycler that grows linearly
+     * @return a new recycler with a constant bucket size
      * @throws NullPointerException if {@code componentType} or
      *                              {@code supplier} is {@code null}
      */
@@ -62,15 +60,15 @@ public class Recyclers {
     }
 
     /**
-     * Returns a new recycler that grows linearly, has a bucket size of
-     * {@code 128} and uses the specified retention policy.
+     * Returns a new recycler with a bucket size of {@code 128} and the
+     * specified retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param policy        determines how elements are retained
      * @param supplier      supplier for providing elements when the recycler
      *                      is empty.
      * @param <T>           the element type
-     * @return a new recycler that grows linearly
+     * @return a new recycler with a constant bucket size
      * @throws NullPointerException if {@code componentType}, {@code policy} or
      *                              {@code supplier} is {@code null}
      */
@@ -82,15 +80,15 @@ public class Recyclers {
     }
 
     /**
-     * Returns a new recycler that grows linearly and has the specified bucket
-     * size.
+     * Returns a new recycler with the specified bucket size and a
+     * {@link PoolAny} retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param bucketSize    the size of each bucket in the recycler
      * @param supplier      supplier for providing elements when the recycler
      *                      is empty.
      * @param <T>           the element type
-     * @return a new recycler that grows linearly
+     * @return a new recycler with a constant bucket size
      * @throws IllegalArgumentException if {@code bucketSize} is less than
      *                                  {@code 1}
      * @throws NullPointerException     if {@code componentType} or
@@ -100,12 +98,12 @@ public class Recyclers {
     @NotNull
     public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType, final int bucketSize,
             @NotNull final Supplier<T> supplier) {
-        return new DefaultRecycler<>(new ConstantProducer<>(componentType, bucketSize), PoolAny.get(), supplier);
+        return createConstant(componentType, 128, PoolAny.get(), supplier);
     }
 
     /**
-     * Returns a new recycler that grows linearly, has the specified bucket
-     * size and uses the specified retention policy.
+     * Returns a new recycler with the specified bucket size and the specified
+     * retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param bucketSize    the size of each bucket in the recycler
@@ -113,7 +111,7 @@ public class Recyclers {
      * @param supplier      supplier for providing elements when the recycler
      *                      is empty.
      * @param <T>           the element type
-     * @return a new recycler that grows linearly
+     * @return a new recycler with a constant bucket size
      * @throws IllegalArgumentException if {@code bucketSize} is less than
      *                                  {@code 1}
      * @throws NullPointerException     if {@code componentType},
