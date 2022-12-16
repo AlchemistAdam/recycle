@@ -128,6 +128,53 @@ public class Recyclers {
     }
 
     /**
+     * Constant producer of bucket arrays for a {@link RecyclerStack}. All
+     * arrays produced have the exact same length.
+     *
+     * @param <T> the element type
+     */
+    @SuppressWarnings("ClassCanBeRecord") // class is internal
+    protected static class ConstantProducer<T> implements ArrayProducer<T> {
+
+        /**
+         * The array component type.
+         */
+        @NotNull
+        public final Class<T> componentType;
+        /**
+         * The size (array length) of each bucket.
+         */
+        public final int bucketSize;
+
+        /**
+         * Constructs a new producer that returns equally sized arrays.
+         *
+         * @param componentType the array component type
+         * @param bucketSize    the size (array length) of each bucket
+         * @throws NullPointerException     if {@code componentType} is
+         *                                  {@code null}
+         * @throws IllegalArgumentException if {@code bucketSize < 1}
+         */
+        public ConstantProducer(@NotNull final Class<T> componentType, final int bucketSize) {
+            this.componentType = Objects.requireNonNull(componentType, "componentType is null");
+            if (bucketSize < 1)
+                throw new IllegalArgumentException("bucketSize is less than 1");
+            this.bucketSize = bucketSize;
+        }
+
+        /**
+         * Returns a new array with a length equal to {@link #bucketSize}.
+         */
+        @Contract(value = "_ -> new", pure = true)
+        @NotNull
+        @Override
+        public T[] get(final int x) {
+            //noinspection unchecked
+            return (T[]) Array.newInstance(componentType, bucketSize);
+        }
+    }
+
+    /**
      * Exponential producer of bucket arrays for a {@link RecyclerStack}. The
      * length of produced arrays will increase exponentially.
      *
@@ -195,6 +242,7 @@ public class Recyclers {
          *     coefficient * (int) Math.pow(base, x)
          * </pre>
          */
+        @Contract(value = "_ -> new", pure = true)
         @NotNull
         @Override
         public T[] get(final int x) {
@@ -205,15 +253,14 @@ public class Recyclers {
         }
     }
 
-
     /**
-     * Constant producer of bucket arrays for a {@link RecyclerStack}. All
-     * arrays produced have the exact same length.
+     * Exponential producer of bucket arrays for a {@link RecyclerStack}. The
+     * length of produced arrays will increase linearly.
      *
      * @param <T> the element type
      */
     @SuppressWarnings("ClassCanBeRecord") // class is internal
-    protected static class ConstantProducer<T> implements ArrayProducer<T> {
+    protected static class LinearProducer<T> implements ArrayProducer<T> {
 
         /**
          * The array component type.
@@ -221,33 +268,65 @@ public class Recyclers {
         @NotNull
         public final Class<T> componentType;
         /**
-         * The size (array length) of each bucket.
+         * The coefficient when calculating the array length. Equal to
+         * {@code b} in the expression
+         * <pre>
+         *     y = b + a * x
+         * </pre>
+         * where {@code y} is the array length.
          */
-        public final int bucketSize;
+        public final int coefficient;
+        /**
+         * The slope when calculating the array length. Equal to {@code a} in
+         * the expression
+         * <pre>
+         *     y = b + a * x
+         * </pre>
+         * where {@code y} is the array length.
+         */
+        public final int slope;
 
         /**
-         * Constructs a new producer that returns equally sized arrays.
+         * Constructs a new producer that returns arrays which grow linearly.
+         * Given a parameter {@code x}, the array length {@code y} is defined
+         * as
+         * <pre>
+         *     y = b * a ^ x
+         * </pre>
+         * where {@code b} and {@code a} are the coefficient and the slope,
+         * respectively.
          *
          * @param componentType the array component type
-         * @param bucketSize    the size (array length) of each bucket
+         * @param coefficient   The coefficient when calculating the array
+         *                      length
+         * @param slope         The slope when calculating the array length
          * @throws NullPointerException     if {@code componentType} is
          *                                  {@code null}
-         * @throws IllegalArgumentException if {@code bucketSize < 1}
+         * @throws IllegalArgumentException if {@code coefficient < 1} or
+         *                                  {@code slope < 1}
          */
-        public ConstantProducer(@NotNull final Class<T> componentType, final int bucketSize) {
+        public LinearProducer(@NotNull final Class<T> componentType, final int coefficient, final int slope) {
             this.componentType = Objects.requireNonNull(componentType, "componentType is null");
-            if (bucketSize < 1)
-                throw new IllegalArgumentException("bucketSize is less than 1");
-            this.bucketSize = bucketSize;
+            if (coefficient < 1)
+                throw new IllegalArgumentException("coefficient is less than 1");
+            if (slope < 1)
+                throw new IllegalArgumentException("base is less than 1");
+            this.coefficient = coefficient;
+            this.slope = slope;
         }
 
         /**
-         * Returns a new array with a length equal to {@link #bucketSize}.
+         * Returns a new array with a length equal to
+         * <pre>
+         *     coefficient + slope * x
+         * </pre>
          */
         @Contract(value = "_ -> new", pure = true)
         @NotNull
         @Override
         public T[] get(final int x) {
+            // y = b * a ^ x
+            final int bucketSize = coefficient + slope * x;
             //noinspection unchecked
             return (T[]) Array.newInstance(componentType, bucketSize);
         }
