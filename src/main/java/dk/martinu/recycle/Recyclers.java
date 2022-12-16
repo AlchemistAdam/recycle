@@ -128,6 +128,85 @@ public class Recyclers {
     }
 
     /**
+     * Exponential producer of bucket arrays for a {@link RecyclerStack}. The
+     * length of produced arrays will increase exponentially.
+     *
+     * @param <T> the element type
+     */
+    @SuppressWarnings("ClassCanBeRecord") // class is internal
+    protected static class ExponentialProducer<T> implements ArrayProducer<T> {
+
+        /**
+         * The array component type.
+         */
+        @NotNull
+        public final Class<T> componentType;
+        /**
+         * The coefficient when calculating the array length. Equal to
+         * {@code b} in the expression
+         * <pre>
+         *     y = b * a^x
+         * </pre>
+         * where {@code y} is the array length.
+         */
+        public final int coefficient;
+        /**
+         * The base when calculating the array length. Equal to {@code a} in
+         * the expression
+         * <pre>
+         *     y = b * a^x
+         * </pre>
+         * where {@code y} is the array length.
+         */
+        public final double base;
+
+        /**
+         * Constructs a new producer that returns arrays which grow
+         * exponentially. Given a parameter {@code x}, the array length
+         * {@code y} is defined as
+         * <pre>
+         *     y = b * a ^ x
+         * </pre>
+         * where {@code b} and {@code a} are the coefficient and the base,
+         * respectively.
+         *
+         * @param componentType the array component type
+         * @param coefficient   The coefficient when calculating the array
+         *                      length
+         * @param base          The base when calculating the array length
+         * @throws NullPointerException     if {@code componentType} is
+         *                                  {@code null}
+         * @throws IllegalArgumentException if {@code coefficient < 1} or
+         *                                  {@code base < 1}
+         */
+        public ExponentialProducer(@NotNull final Class<T> componentType, final int coefficient, final double base) {
+            this.componentType = Objects.requireNonNull(componentType, "componentType is null");
+            if (coefficient < 1)
+                throw new IllegalArgumentException("coefficient is less than 1");
+            if (base < 1)
+                throw new IllegalArgumentException("base is less than 1");
+            this.coefficient = coefficient;
+            this.base = base;
+        }
+
+        /**
+         * Returns a new array with a length equal to
+         * <pre>
+         *     coefficient * (int) Math.pow(base, x)
+         * </pre>
+         */
+        @NotNull
+        @Override
+        public T[] get(final int x) {
+            // y = b * a ^ x
+            final int bucketSize = coefficient * (int) Math.pow(base, x);
+            //noinspection unchecked
+            return (T[]) Array.newInstance(componentType, bucketSize);
+        }
+    }
+
+
+    /**
      * Constant producer of bucket arrays for a {@link RecyclerStack}. All
      * arrays produced have the exact same length.
      *
