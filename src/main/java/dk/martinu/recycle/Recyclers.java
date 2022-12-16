@@ -56,9 +56,9 @@ public class Recyclers {
      */
     @Contract(value = "_, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
+    public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType,
             @NotNull final Supplier<T> supplier) {
-        return createLinear(componentType, 128, PoolAny.get(), supplier);
+        return createConstant(componentType, 128, PoolAny.get(), supplier);
     }
 
     /**
@@ -76,9 +76,9 @@ public class Recyclers {
      */
     @Contract(value = "_, _, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
+    public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType,
             @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
-        return createLinear(componentType, 128, policy, supplier);
+        return createConstant(componentType, 128, policy, supplier);
     }
 
     /**
@@ -98,9 +98,9 @@ public class Recyclers {
      */
     @Contract(value = "_, _, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int bucketSize,
+    public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType, final int bucketSize,
             @NotNull final Supplier<T> supplier) {
-        return new DefaultRecycler<>(new LinearProducer<>(componentType, bucketSize), PoolAny.get(), supplier);
+        return new DefaultRecycler<>(new ConstantProducer<>(componentType, bucketSize), PoolAny.get(), supplier);
     }
 
     /**
@@ -122,20 +122,19 @@ public class Recyclers {
      */
     @Contract(value = "_, _, _, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int bucketSize,
+    public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType, final int bucketSize,
             @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
-        return new DefaultRecycler<>(new LinearProducer<>(componentType, bucketSize), policy, supplier);
+        return new DefaultRecycler<>(new ConstantProducer<>(componentType, bucketSize), policy, supplier);
     }
 
     /**
-     * Linear producer of bucket arrays for a {@link RecyclerStack}. All arrays
-     * produced have the exact same length, and as a result the capacity of the
-     * stack will grow linearly.
+     * Constant producer of bucket arrays for a {@link RecyclerStack}. All
+     * arrays produced have the exact same length.
      *
      * @param <T> the element type
      */
     @SuppressWarnings("ClassCanBeRecord") // class is internal
-    protected static class LinearProducer<T> implements ArrayProducer<T> {
+    protected static class ConstantProducer<T> implements ArrayProducer<T> {
 
         /**
          * The array component type.
@@ -156,7 +155,7 @@ public class Recyclers {
          *                                  {@code null}
          * @throws IllegalArgumentException if {@code bucketSize < 1}
          */
-        public LinearProducer(@NotNull final Class<T> componentType, final int bucketSize) {
+        public ConstantProducer(@NotNull final Class<T> componentType, final int bucketSize) {
             this.componentType = Objects.requireNonNull(componentType, "componentType is null");
             if (bucketSize < 1)
                 throw new IllegalArgumentException("bucketSize is less than 1");

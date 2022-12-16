@@ -156,9 +156,9 @@ public class RecyclerTest {
             final Recycler<?> recycler;
             final AtomicInteger ai = new AtomicInteger();
             if (methodName.endsWith("_lim"))
-                recycler = Recyclers.createLinear(Integer.class, 1, ai::getAndIncrement);
+                recycler = Recyclers.createConstant(Integer.class, 1, ai::getAndIncrement);
             else
-                recycler = Recyclers.createLinear(Integer.class, ai::getAndIncrement);
+                recycler = Recyclers.createConstant(Integer.class, ai::getAndIncrement);
 
             return Stream.of(recycler).map(Arguments::of);
         }
