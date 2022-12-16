@@ -98,12 +98,12 @@ public class Recyclers {
     @NotNull
     public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType, final int bucketSize,
             @NotNull final Supplier<T> supplier) {
-        return createConstant(componentType, 128, PoolAny.get(), supplier);
+        return createConstant(componentType, bucketSize, PoolAny.get(), supplier);
     }
 
     /**
-     * Returns a new recycler with the specified bucket size and the specified
-     * retention policy.
+     * Returns a new recycler with the specified bucket size and retention
+     * policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param bucketSize    the size of each bucket in the recycler
@@ -112,17 +112,78 @@ public class Recyclers {
      *                      is empty.
      * @param <T>           the element type
      * @return a new recycler with a constant bucket size
-     * @throws IllegalArgumentException if {@code bucketSize} is less than
-     *                                  {@code 1}
-     * @throws NullPointerException     if {@code componentType},
-     *                                  {@code policy} or {@code supplier} is
-     *                                  {@code null}
+     * @throws NullPointerException if {@code componentType} or
+     *                              {@code supplier} is {@code null}
      */
     @Contract(value = "_, _, _, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createConstant(@NotNull final Class<T> componentType, final int bucketSize,
             @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
         return new DefaultRecycler<>(new ConstantProducer<>(componentType, bucketSize), policy, supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType,
+            @NotNull final Supplier<T> supplier) {
+        return createExponential(componentType, 64, 1.25d, PoolAny.get(), supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType,
+            @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
+        return createExponential(componentType, 64, 1.25d, policy, supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType, final int coefficient,
+            final double base, @NotNull final Supplier<T> supplier) {
+        return createExponential(componentType, coefficient, base, PoolAny.get(), supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType, final int coefficient,
+            final double base, @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
+        return new DefaultRecycler<>(new ExponentialProducer<>(componentType, coefficient, base), policy, supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
+            @NotNull final Supplier<T> supplier) {
+        return createLinear(componentType, 64, 64, PoolAny.get(), supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
+            @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
+        return createLinear(componentType, 64, 64, policy, supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int coefficient,
+            final int slope, @NotNull final Supplier<T> supplier) {
+        return createLinear(componentType, coefficient, slope, PoolAny.get(), supplier);
+    }
+
+    // DOC
+    @Contract(value = "_, _, _, _, _ -> new", pure = true)
+    @NotNull
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int coefficient,
+            final int slope, @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
+        return new DefaultRecycler<>(new LinearProducer<>(componentType, coefficient, slope), policy, supplier);
     }
 
     /**
