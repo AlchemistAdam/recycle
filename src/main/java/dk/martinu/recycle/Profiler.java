@@ -280,11 +280,6 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         @NotNull
         protected final RecyclerStack<?> stack;
         /**
-         * The bucket that is currently used.
-         */
-        @NotNull
-        protected RecyclerStack.Bucket<?> bucket;
-        /**
          * Number of elements in the recycler stack.
          */
         protected int nElements;
@@ -321,15 +316,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
             nElements = stack.size();
 
             // count initial number of buckets
-            nBuckets = 1;
-            bucket = stack.bucket;
-            while (bucket.next != null) {
-                bucket = bucket.next;
-                nBuckets++;
-            }
-
-            // reset bucket variable to last bucket
-            bucket = stack.bucket;
+            nBuckets = stack.bucketCount;
         }
 
         /**
@@ -357,10 +344,8 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         public synchronized void incrementFree() {
             nFree++;
             nElements++;
-            if (bucket != stack.bucket) {
-                bucket = stack.bucket;
-                nBuckets++;
-            }
+            if (nBuckets != stack.bucketCount)
+                nBuckets = stack.bucketCount;
         }
 
         /**
@@ -372,10 +357,8 @@ public class Profiler<T> extends Thread implements Recycler<T> {
                 nRecycled++;
                 nElements--;
             }
-            if (bucket != stack.bucket) {
-                bucket = stack.bucket;
-                nBuckets--;
-            }
+            if (nBuckets != stack.bucketCount)
+                nBuckets = stack.bucketCount;
         }
     }
 }
