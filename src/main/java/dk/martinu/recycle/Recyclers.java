@@ -350,7 +350,7 @@ public class Recyclers {
          * Given a parameter {@code x}, the array length {@code y} is defined
          * as
          * <pre>
-         *     y = b * a ^ x
+         *     y = b + a * x
          * </pre>
          * where {@code b} and {@code a} are the coefficient and the slope,
          * respectively.
@@ -384,7 +384,7 @@ public class Recyclers {
         @NotNull
         @Override
         public T[] get(final int x) {
-            // y = b * a ^ x
+            // y = b + a * x
             final int bucketSize = coefficient + slope * x;
             //noinspection unchecked
             return (T[]) Array.newInstance(componentType, bucketSize);
