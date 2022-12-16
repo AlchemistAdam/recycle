@@ -265,9 +265,9 @@ public class RecyclerStackTest {
             final String methodName = context.getTestMethod().orElseThrow().getName();
             final RecyclerStack<Integer> stack;
             if (methodName.endsWith("_lim"))
-                stack = new RecyclerStack<>(() -> new Integer[1], PoolAny.get());
+                stack = new RecyclerStack<>(x -> new Integer[1], PoolAny.get());
             else
-                stack = new RecyclerStack<>(() -> new Integer[128], PoolAny.get());
+                stack = new RecyclerStack<>(x -> new Integer[128], PoolAny.get());
 
             return Stream.of(stack).map(Arguments::of);
         }
