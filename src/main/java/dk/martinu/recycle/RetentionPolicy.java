@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Adam Martinu
  * @since 1.0
  */
-public interface  RetentionPolicy {
+public interface RetentionPolicy {
 
     /**
      * Returns {@code true} if an element can be pushed onto the stack,
@@ -48,18 +48,11 @@ public interface  RetentionPolicy {
     boolean canPush();
 
     /**
-     * Event method called by {@link RecyclerStack} whenever an element is
-     * popped. Does nothing by default.
+     * Returns how many elements can be pushed, up to {@code n} elements. This
+     * method will be called by {@link RecyclerStack#push(Object)} to determine
+     * if an element should be pushed or not.
      */
-    @Contract(pure = true)
-    default void onPop() { }
-
-    /**
-     * Event method called by {@link RecyclerStack} whenever an element
-     * is pushed. Does nothing by default.
-     */
-    @Contract(pure = true)
-    default void onPush() { }
+    int canPush(final int n);
 
     /**
      * Called by {@link RecyclerStack} when constructing an instance or setting
@@ -70,6 +63,41 @@ public interface  RetentionPolicy {
      */
     @Contract(pure = true)
     default void install(@NotNull final RecyclerStack<?> stack) { }
+
+    /**
+     * Event method called by {@link RecyclerStack} whenever {@code clear} is
+     * called. Does nothing by default.
+     */
+    @Contract(pure = true)
+    default void onClear() { }
+
+    /**
+     * Event method called by {@link RecyclerStack} whenever an element is
+     * popped. Does nothing by default.
+     */
+    @Contract(pure = true)
+    default void onPop() { }
+
+    /**
+     * Event method called by {@link RecyclerStack} whenever elements are
+     * popped in bulk. Does nothing by default.
+     */
+    @Contract(pure = true)
+    default void onPop(final int n) { }
+
+    /**
+     * Event method called by {@link RecyclerStack} whenever an element
+     * is pushed. Does nothing by default.
+     */
+    @Contract(pure = true)
+    default void onPush() { }
+
+    /**
+     * Event method called by {@link RecyclerStack} whenever element are
+     * pushed in bulk. Does nothing by default.
+     */
+    @Contract(pure = true)
+    default void onPush(final int n) { }
 
     /**
      * Called by {@link RecyclerStack} when setting a new retention policy.

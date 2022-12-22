@@ -59,11 +59,20 @@ public class PoolNone implements RetentionPolicy {
      * Returns {@code false}; This retention policy does not allow elements to
      * be pushed.
      */
-    @Contract(pure = true)
+    @Contract(value = "-> false", pure = true)
     @Override
     public boolean canPush() {
-        // never allow elements to be stored
         return false;
+    }
+
+    /**
+     * Returns {@code 0}; This retention policy does not allow elements to be
+     * pushed.
+     */
+    @Contract(pure = true)
+    @Override
+    public int canPush(final int n) {
+        return 0;
     }
 
     /**
@@ -73,7 +82,6 @@ public class PoolNone implements RetentionPolicy {
     @Contract()
     @Override
     public void install(@NotNull final RecyclerStack<?> stack) {
-        // remove any pooled elements
         stack.clear();
     }
 }

@@ -54,10 +54,19 @@ public class PoolAnyTimed extends RetentionPolicyTimed {
      * Returns {@code true}; This retention policy allows all elements to be
      * pushed.
      */
-    @Contract(pure = true)
+    @Contract(value = "-> true", pure = true)
     @Override
     public boolean canPush() {
-        // always allow elements to be stored
         return true;
+    }
+
+    /**
+     * Returns {@code n}; This retention policy allows all elements to be
+     * pushed.
+     */
+    @Contract(value = "_ -> param1", pure = true)
+    @Override
+    public int canPush(final int n) {
+        return n;
     }
 }

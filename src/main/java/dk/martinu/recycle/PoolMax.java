@@ -61,6 +61,23 @@ public class PoolMax implements RetentionPolicy {
     }
 
     /**
+     * Returns the remaining elements spaces, or {@code n} if smaller.
+     */
+    @Contract(pure = true)
+    @Override
+    public int canPush(final int n) {
+        return Math.min(size - count, n);
+    }
+
+    /**
+     * Resets the count of retained elements to {@code 0}.
+     */
+    @Override
+    public void onClear() {
+        count = 0;
+    }
+
+    /**
      * Decreases the count of retained elements.
      */
     @Override
@@ -69,11 +86,27 @@ public class PoolMax implements RetentionPolicy {
     }
 
     /**
+     * Decreases the count of retained elements.
+     */
+    @Override
+    public void onPop(final int n) {
+        count -= n;
+    }
+
+    /**
      * Increases the count of retained elements.
      */
     @Override
     public void onPush() {
         count++;
+    }
+
+    /**
+     * Increases the count of retained elements.
+     */
+    @Override
+    public void onPush(final int n) {
+        count += n;
     }
 
     /**
