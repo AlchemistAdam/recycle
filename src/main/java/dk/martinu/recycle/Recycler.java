@@ -20,6 +20,8 @@ package dk.martinu.recycle;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
+
 /**
  * The base interface of a recycler. Recyclers are similar to stacks; both are
  * collections of elements, and allow the collection to be modified with
@@ -73,13 +75,40 @@ public interface Recycler<T> {
      */
     void free(T element);
 
+    // DOC
+    // TEST
+    default void free(final T[] array) {
+        Objects.requireNonNull(array, "array is null");
+        free(array, array.length);
+    }
+
+    // DOC
+    // TEST
+    void free(final T[] array, final int n);
+
     /**
      * Returns a potentially recycled element.
      */
     T get();
 
+    // DOC
+    // TEST
+    @Contract(value = "_ -> param1", mutates = "param1")
+    default T[] get(final T[] array) {
+        Objects.requireNonNull(array, "array is null");
+        return get(array, array.length);
+    }
+
+    // DOC
+    // TEST
+    @Contract(value = "_, _ -> param1", mutates = "param1")
+    T[] get(final T[] array, final int n);
+
     /**
      * Returns the underlying stack this recycler operates on.
+     * <p>
+     * <b>NOTE:</b> the {@code RecyclerStack} implementation is not
+     * synchronized and should not be used concurrently.
      */
     @Contract(pure = true)
     @NotNull

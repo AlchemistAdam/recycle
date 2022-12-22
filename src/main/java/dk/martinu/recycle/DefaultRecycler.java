@@ -88,6 +88,16 @@ public class DefaultRecycler<T> implements Recycler<T> {
      * {@inheritDoc}
      */
     @Override
+    public void free(final T[] array, final int n) {
+        synchronized (stack) {
+            stack.push(array, n);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public T get() {
         synchronized (stack) {
             if (stack.isEmpty())
@@ -95,6 +105,23 @@ public class DefaultRecycler<T> implements Recycler<T> {
             else
                 return stack.pop();
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Contract(value = "_, _ -> param1", mutates = "param1")
+    @Override
+    public T[] get(final T[] array, final int n) {
+        final int popCount;
+        synchronized (stack) {
+            popCount = stack.pop(array, n);
+        }
+        if (popCount < n) {
+            for (int i = popCount; i < n; i++)
+                array[i] = supplier.get();
+        }
+        return array;
     }
 
     /**

@@ -22,6 +22,7 @@ import org.jetbrains.annotations.*;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+// DOC this implementation is not synchronized
 /**
  * A simple stack implementation that stores elements in buckets (a collection
  * of arrays). Buckets are created and disposed as needed. The size of each
@@ -87,19 +88,18 @@ public class RecyclerStack<T> {
         // iterate all buckets
         while (cursor != 0 || bucket.next != null) {
 
-            // dispose current bucket if empty
-            if (cursor == 0) {
+            // dispose bucket if not 1st
+            if (bucket.next != null) {
                 bucket = bucket.next;
                 cursor = bucket.array.length;
                 bucketCount--;
             }
-
-            // empty bucket
-            for (int i = 0; i < cursor; i++)
-                bucket.array[i] = null;
-
-            // reset cursor position
-            cursor = 0;
+            // empty bucket if 1st
+            else {
+                for (int i = 0; i < cursor; i++)
+                    bucket.array[i] = null;
+                cursor = 0;
+            }
         }
     }
 
@@ -144,6 +144,70 @@ public class RecyclerStack<T> {
         return rv;
     }
 
+    // DOC
+    // TEST
+    @Contract(mutates = "param1")
+    public int pop(final T[] array, int n) {
+        final int nInitial = n;
+        int index = 0;
+
+        // iterate all buckets for n > 0
+        while (n > 0 && (cursor != 0 || bucket.next != null)) {
+
+            // dispose current bucket if empty
+            if (cursor == 0) {
+                bucket = bucket.next;
+                cursor = bucket.array.length;
+                bucketCount--;
+            }
+
+            /*
+            small optimization that uses arraycopy and disposes the bucket
+            immediately, instead of stepping through the array and
+            copying/nullifying every element
+             */
+            // pop all elements from this bucket
+            if (n > cursor && bucket.next != null) {
+
+                // copy (pop) all bucket elements
+                System.arraycopy(bucket.array, 0, array, nInitial - n, cursor);
+
+                // decrease remaining pop count
+                n -= cursor;
+
+                // dispose this bucket
+                bucket = bucket.next;
+                cursor = bucket.array.length;
+                bucketCount--;
+            }
+
+            // pop up to n elements from this bucket
+            else {
+                // number of elements to pop from bucket
+                final int m = Math.min(cursor, n);
+
+                // pop elements
+                for (int i = cursor - m; i < cursor; i++) {
+                    array[index++] = bucket.array[i];
+                    bucket.array[i] = null;
+                }
+
+                // decrease cursor position
+                cursor -= m;
+                // decrease remaining pop count n
+                n -= m;
+            }
+        }
+
+        final int popCount = nInitial - n;
+
+        // notify retention policy
+        if (popCount > 0)
+            ; // TODO notify retention policy
+
+        return popCount;
+    }
+
     /**
      * Pushes the specified element onto the stack.
      */
@@ -164,6 +228,12 @@ public class RecyclerStack<T> {
             // notify retention policy
             policy.onPush();
         }
+    }
+
+    //DOC
+    // TEST
+    public void push(final T[] array, final int n) {
+
     }
 
     /**
@@ -250,7 +320,7 @@ public class RecyclerStack<T> {
          * @param array the array to store elements in
          * @throws NullPointerException if {@code array} is {@code null}
          */
-        public Bucket(@Nullable final Bucket<T> next, @NotNull final T[] array) {
+        public Bucket(@Nullable final Bucket<T> next, final T[] array) {
             this.next = next;
             this.array = Objects.requireNonNull(array, "array is null");
         }
