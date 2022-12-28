@@ -185,12 +185,23 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      */
     @Override
     public void free(final T element) {
-        recycler.free(element);
-        session.incrementFree();
-        synchronized (this) {
-            if (getState() == State.NEW)
-                start();
+        synchronized (recycler) {
+            recycler.free(element);
+            session.incrementFree();
         }
+        startIfNew();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void free(final T[] array, final int n) {
+        synchronized (recycler) {
+            recycler.free(array, n);
+            session.incrementFreeArray();
+        }
+        startIfNew();
     }
 
     /**
@@ -198,13 +209,27 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      */
     @Override
     public T get() {
-        final T rv = recycler.get();
-        session.incrementGet();
-        synchronized (this) {
-            if (getState() == State.NEW)
-                start();
+        final T rv;
+        synchronized (recycler) {
+            rv = recycler.get();
+            session.incrementGet();
         }
+        startIfNew();
         return rv;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Contract(value = "_, _ -> param1", mutates = "param1")
+    @Override
+    public T[] get(final T[] array, final int n) {
+        synchronized (recycler) {
+            recycler.get(array, n);
+            session.incrementGetArray(n);
+        }
+        startIfNew();
+        return array;
     }
 
     /**
@@ -280,6 +305,14 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     }
 
     /**
+     * Starts this thread if {@code getState()} returns {@code State.NEW}.
+     */
+    protected synchronized void startIfNew() {
+        if (getState() == State.NEW)
+            start();
+    }
+
+    /**
      * Container class for storing statistics during a profiling session.
      */
     public static class Session {
@@ -289,6 +322,10 @@ public class Profiler<T> extends Thread implements Recycler<T> {
          */
         @NotNull
         protected final RecyclerStack<?> stack;
+        /**
+         * Internal cursor copy used for tracking of elements.
+         */
+        protected int cursor;
         /**
          * Number of elements in the recycler stack.
          */
@@ -324,6 +361,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
          */
         public Session(@NotNull final RecyclerStack<?> stack) {
             this.stack = Objects.requireNonNull(stack, "stack is null");
+            this.cursor = stack.cursor;
 
             // initial number of elements
             nElements = stack.size();
@@ -363,10 +401,55 @@ public class Profiler<T> extends Thread implements Recycler<T> {
          * Called whenever {@link Profiler#free(Object)} is called.
          */
         public synchronized void incrementFree() {
-            nFree++;
-            nElements++;
-            if (nBuckets != stack.bucketCount)
+            // new bucket in stack
+            if (nBuckets != stack.bucketCount) {
+                nFree++;
+                nElements++;
                 nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+            // new cursor position in same bucket
+            else if (cursor != stack.cursor) {
+                nFree++;
+                nElements++;
+                cursor = stack.cursor;
+            }
+        }
+
+        /**
+         * Called whenever {@link Profiler#free(Object[], int)} is called.
+         */
+        public synchronized void incrementFreeArray() {
+            // new bucket(s) in stack
+            if (nBuckets != stack.bucketCount) {
+                int pushCount = 0;
+
+                // temporary bucket variable
+                RecyclerStack.Bucket<?> bucket = stack.bucket;
+
+                // follow links until bucket var is equal to last known bucket
+                for (int i = stack.bucketCount; i > nBuckets; i--) {
+                    //noinspection ConstantConditions
+                    pushCount += bucket.array.length;
+                    bucket = bucket.next;
+                }
+
+                //noinspection ConstantConditions
+                pushCount += bucket.array.length - cursor;
+
+                nFree += pushCount;
+                nElements += pushCount;
+                nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+            // new cursor position in same bucket
+            else if (cursor != stack.cursor) {
+                final int pushCount = stack.cursor - cursor;
+
+                nFree += pushCount;
+                nElements += pushCount;
+                cursor = stack.cursor;
+            }
         }
 
         /**
@@ -374,12 +457,30 @@ public class Profiler<T> extends Thread implements Recycler<T> {
          */
         public synchronized void incrementGet() {
             nGet++;
+
             if (nElements > 0) {
                 nRecycled++;
                 nElements--;
-            }
-            if (nBuckets != stack.bucketCount)
                 nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+        }
+
+        /**
+         * Called whenever {@link Profiler#get(Object[], int)} is called.
+         *
+         * @param n {@code int} parameter passed to {@code get}
+         */
+        public synchronized void incrementGetArray(final int n) {
+            nGet += n;
+
+            if (nElements > 0) {
+                final int popCount = Math.min(nElements, n);
+                nRecycled += popCount;
+                nElements -= popCount;
+                nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
         }
     }
 }
