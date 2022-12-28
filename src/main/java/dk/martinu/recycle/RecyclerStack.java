@@ -22,7 +22,6 @@ import org.jetbrains.annotations.*;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-// DOC this implementation is not synchronized
 /**
  * A simple stack implementation that stores elements in buckets (a collection
  * of arrays). Buckets are created and disposed as needed. The size of each
@@ -31,6 +30,9 @@ import java.util.Objects;
  * sizes (e.g., linear, exponential) is <b>not</b> defined by this
  * implementation, but the creator of a {@code RecyclerStack} object supplying
  * the {@code ArrayProducer} instance.
+ * <p>
+ * <b>NOTE:</b> this implementation is not thread safe. Access to an instance
+ * of this class must be synchronized externally if it is used concurrently.
  *
  * @param <T> the element type
  * @author Adam Martinu
@@ -144,10 +146,20 @@ public class RecyclerStack<T> {
         return rv;
     }
 
-    // DOC
+    /**
+     * Pops up to {@code n} elements from the stack and returns the number of
+     * popped elements. Elements that are popped are stored in the specified
+     * array.
+     *
+     * @param array array to store popped elements in
+     * @param n     number of elements to pop
+     * @return the number of popped elements
+     */
     // TEST
     @Contract(mutates = "param1")
     public int pop(final T[] array, int n) {
+        assert n <= array.length;
+
         final int nInitial = n;
         int index = 0;
 
@@ -203,7 +215,7 @@ public class RecyclerStack<T> {
 
         // notify retention policy
         if (popCount > 0)
-            ; // TODO notify retention policy
+            policy.onPop(popCount);
 
         return popCount;
     }
@@ -230,10 +242,40 @@ public class RecyclerStack<T> {
         }
     }
 
-    //DOC
+    /**
+     * Pushes up to {@code n} elements onto the stack from the specified array.
+     *
+     * @param array the array containing elements to push
+     * @param n     number of elements to push
+     */
     // TEST
-    public void push(final T[] array, final int n) {
+    public void push(final T[] array, int n) {
+        assert n <= array.length;
 
+        int pushCount = 0;
+        int index = 0;
+
+        // check retention policy
+        n = policy.canPush(n);
+
+        while (pushCount < n) {
+
+            // allocate new bucket if current is full
+            if (cursor == bucket.array.length) {
+                bucket = new Bucket<>(bucket, producer.get(bucketCount++));
+                cursor = 0;
+            }
+
+            // push elements
+            while (cursor < bucket.array.length && pushCount < n) {
+                bucket.array[cursor++] = array[index++];
+                pushCount++;
+            }
+        }
+
+        // notify retention policy
+        if (pushCount > 0)
+            policy.onPush(pushCount);
     }
 
     /**
