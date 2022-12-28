@@ -149,7 +149,10 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      */
     @Override
     public void clear() {
-        recycler.clear();
+        synchronized (recycler) {
+            recycler.clear();
+            session.clear();
+        }
     }
 
     /**
@@ -317,6 +320,14 @@ public class Profiler<T> extends Thread implements Recycler<T> {
 
             // count initial number of buckets
             nBuckets = stack.bucketCount;
+        }
+
+        /**
+         * Called whenever {@link Profiler#clear()} is called.
+         */
+        public synchronized void clear() {
+            nElements = 0;
+            nBuckets = 1;
         }
 
         /**
