@@ -29,7 +29,9 @@ import java.util.function.Supplier;
  * <p>
  * This factory can create the following types of recyclers:
  * <ul>
- *     <li>Linear</li>
+ *     <li>{@link #createConstant(Class, int, RetentionPolicy, Supplier) Constant}</li>
+ *     <li>{@link #createLinear(Class, int, int, RetentionPolicy, Supplier) Linear}</li>
+ *     <li>{@link #createExponential(Class, int, double, RetentionPolicy, Supplier) Exponential}</li>
  * </ul>
  * Additionally, each factory method is overloaded to accept a
  * {@link RetentionPolicy} instance to further control how the recycler
@@ -41,7 +43,7 @@ import java.util.function.Supplier;
 public class Recyclers {
 
     /**
-     * Returns a new recycler with a bucket size of {@code 128} and a
+     * Returns a new recycler with a constant bucket size of {@code 128} and a
      * {@link PoolAny} retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
@@ -60,8 +62,8 @@ public class Recyclers {
     }
 
     /**
-     * Returns a new recycler with a bucket size of {@code 128} and the
-     * specified retention policy.
+     * Returns a new recycler with a constant bucket size of {@code 128} and
+     * the specified retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param policy        determines how elements are retained
@@ -80,7 +82,7 @@ public class Recyclers {
     }
 
     /**
-     * Returns a new recycler with the specified bucket size and a
+     * Returns a new recycler with the specified constant bucket size and a
      * {@link PoolAny} retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
@@ -102,8 +104,8 @@ public class Recyclers {
     }
 
     /**
-     * Returns a new recycler with the specified bucket size and retention
-     * policy.
+     * Returns a new recycler with the specified constant bucket size and
+     * retention policy.
      *
      * @param componentType the class of the elements stored in the recycler
      * @param bucketSize    the size of each bucket in the recycler
@@ -112,7 +114,7 @@ public class Recyclers {
      *                      is empty.
      * @param <T>           the element type
      * @return a new recycler with a constant bucket size
-     * @throws NullPointerException if {@code componentType} or
+     * @throws NullPointerException if {@code componentType}, {@code policy} or
      *                              {@code supplier} is {@code null}
      */
     @Contract(value = "_, _, _, _ -> new", pure = true)
@@ -122,7 +124,25 @@ public class Recyclers {
         return new DefaultRecycler<>(new ConstantProducer<>(componentType, bucketSize), policy, supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases exponentially,
+     * using a default coefficient and base of {@code 64} and {@code 1.25d},
+     * and a {@link PoolAny} retention policy. The size of each bucket is
+     * calculated as
+     * <pre>
+     *     f(x) = abˣ
+     * </pre>
+     * where {@code a} and {@code b} are the coefficient and the base,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases exponentially
+     * @throws NullPointerException if {@code componentType} or
+     *                              {@code supplier} is {@code null}
+     */
     @Contract(value = "_, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType,
@@ -130,7 +150,26 @@ public class Recyclers {
         return createExponential(componentType, 64, 1.25d, PoolAny.get(), supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases exponentially,
+     * using a default coefficient and base of {@code 64} and {@code 1.25d},
+     * and the specified retention policy. The size of each bucket is
+     * calculated as
+     * <pre>
+     *     f(x) = abˣ
+     * </pre>
+     * where {@code a} and {@code b} are the coefficient and the base,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param policy        determines how elements are retained
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases exponentially
+     * @throws NullPointerException if {@code componentType}, {@code policy} or
+     *                              {@code supplier} is {@code null}
+     */
     @Contract(value = "_, _, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType,
@@ -138,7 +177,28 @@ public class Recyclers {
         return createExponential(componentType, 64, 1.25d, policy, supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases exponentially
+     * and a {@link PoolAny} retention policy. The size of each bucket is
+     * calculated as
+     * <pre>
+     *     f(x) = abˣ
+     * </pre>
+     * where {@code a} and {@code b} are the coefficient and the base,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param coefficient   the coefficient to the exponentiation
+     * @param base          the base of the exponentiation
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases exponentially
+     * @throws NullPointerException     if {@code componentType} or
+     *                                  {@code supplier} is {@code null}
+     * @throws IllegalArgumentException if {@code coefficient < 1} or
+     *                                  {@code base < 1}
+     */
     @Contract(value = "_, _, _, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType, final int coefficient,
@@ -146,7 +206,30 @@ public class Recyclers {
         return createExponential(componentType, coefficient, base, PoolAny.get(), supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases exponentially
+     * and the specified retention policy. The size of each bucket is
+     * calculated as
+     * <pre>
+     *     f(x) = abˣ
+     * </pre>
+     * where {@code a} and {@code b} are the coefficient and the base,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param coefficient   the coefficient to the exponentiation
+     * @param base          the base of the exponentiation
+     * @param policy        determines how elements are retained
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases exponentially
+     * @throws NullPointerException     if {@code componentType},
+     *                                  {@code policy} or {@code supplier} is
+     *                                  {@code null}
+     * @throws IllegalArgumentException if {@code coefficient < 1} or
+     *                                  {@code base < 1}
+     */
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createExponential(@NotNull final Class<T> componentType, final int coefficient,
@@ -154,7 +237,24 @@ public class Recyclers {
         return new DefaultRecycler<>(new ExponentialProducer<>(componentType, coefficient, base), policy, supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases linearly, using
+     * a default slope and intercept of {@code 64}, and a {@link PoolAny}
+     * retention policy. The size of each bucket is calculated as
+     * <pre>
+     *     f(x) = ax + b
+     * </pre>
+     * where {@code a} and {@code b} are the slope and the intercept,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases linearly
+     * @throws NullPointerException if {@code componentType} or
+     *                              {@code supplier} is {@code null}
+     */
     @Contract(value = "_, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
@@ -162,7 +262,25 @@ public class Recyclers {
         return createLinear(componentType, 64, 64, PoolAny.get(), supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases linearly, using
+     * a default slope and intercept of {@code 64}, and the specified retention
+     * policy. The size of each bucket is calculated as
+     * <pre>
+     *     f(x) = ax + b
+     * </pre>
+     * where {@code a} and {@code b} are the slope and the intercept,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param policy        determines how elements are retained
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases linearly
+     * @throws NullPointerException if {@code componentType}, {@code policy} or
+     *                              {@code supplier} is {@code null}
+     */
     @Contract(value = "_, _, _ -> new", pure = true)
     @NotNull
     public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType,
@@ -170,20 +288,62 @@ public class Recyclers {
         return createLinear(componentType, 64, 64, policy, supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases linearly and a
+     * {@link PoolAny} retention policy. The size of each bucket is calculated as
+     * <pre>
+     *     f(x) = ax + b
+     * </pre>
+     * where {@code a} and {@code b} are the slope and the intercept,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param slope         the slope of a linear line
+     * @param intercept     the intercept of a linear line
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases linearly
+     * @throws NullPointerException     if {@code componentType} or
+     *                                  {@code supplier} is {@code null}
+     * @throws IllegalArgumentException if {@code slope < 1} or
+     *                                  {@code intercept < 1}
+     */
     @Contract(value = "_, _, _, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int coefficient,
-            final int slope, @NotNull final Supplier<T> supplier) {
-        return createLinear(componentType, coefficient, slope, PoolAny.get(), supplier);
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int slope,
+            final int intercept, @NotNull final Supplier<T> supplier) {
+        return createLinear(componentType, slope, intercept, PoolAny.get(), supplier);
     }
 
-    // DOC
+    /**
+     * Returns a new recycler with a bucket size that increases linearly and
+     * the specified retention policy. The size of each bucket is calculated as
+     * <pre>
+     *     f(x) = ax + b
+     * </pre>
+     * where {@code a} and {@code b} are the slope and the intercept,
+     * respectively.
+     *
+     * @param componentType the class of the elements stored in the recycler
+     * @param slope         the slope of a linear line
+     * @param intercept     the intercept of a linear line
+     * @param policy        determines how elements are retained
+     * @param supplier      supplier for providing elements when the recycler
+     *                      is empty.
+     * @param <T>           the element type
+     * @return a new recycler with a bucket size that increases linearly
+     * @throws NullPointerException     if {@code componentType},
+     *                                  {@code policy} or {@code supplier} is
+     *                                  {@code null}
+     * @throws IllegalArgumentException if {@code slope < 1} or
+     *                                  {@code intercept < 1}
+     */
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     @NotNull
-    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int coefficient,
-            final int slope, @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
-        return new DefaultRecycler<>(new LinearProducer<>(componentType, coefficient, slope), policy, supplier);
+    public static <T> Recycler<T> createLinear(@NotNull final Class<T> componentType, final int slope,
+            final int intercept, @NotNull final RetentionPolicy policy, @NotNull final Supplier<T> supplier) {
+        return new DefaultRecycler<>(new LinearProducer<>(componentType, slope, intercept), policy, supplier);
     }
 
     /**
@@ -225,7 +385,6 @@ public class Recyclers {
          * Returns a new array with a length equal to {@link #bucketSize}.
          */
         @Contract(value = "_ -> new", pure = true)
-        @NotNull
         @Override
         public T[] get(final int x) {
             //noinspection unchecked
@@ -235,7 +394,10 @@ public class Recyclers {
 
     /**
      * Exponential producer of bucket arrays for a {@link RecyclerStack}. The
-     * length of produced arrays will increase exponentially.
+     * length of produced arrays is calculated as
+     * <pre>
+     *     f(x) = abˣ
+     * </pre>
      *
      * @param <T> the element type
      */
@@ -249,31 +411,30 @@ public class Recyclers {
         public final Class<T> componentType;
         /**
          * The coefficient when calculating the array length. Equal to
-         * {@code b} in the expression
+         * {@code a} in the expression
          * <pre>
-         *     y = b * a^x
+         *     f(x) = abˣ
          * </pre>
-         * where {@code y} is the array length.
+         * where the result of {@code f(x)} is the array length.
          */
         public final int coefficient;
         /**
          * The base when calculating the array length. Equal to {@code a} in
-         * the expression
          * <pre>
-         *     y = b * a^x
+         *     f(x) = abˣ
          * </pre>
-         * where {@code y} is the array length.
+         * where the result of {@code f(x)} is the array length.
          */
         public final double base;
 
         /**
-         * Constructs a new producer that returns arrays which grow
-         * exponentially. Given a parameter {@code x}, the array length
-         * {@code y} is defined as
+         * Constructs a new producer that returns arrays increasing
+         * exponentially in size. Given a parameter {@code x}, the array length
+         * is calculated as
          * <pre>
-         *     y = b * a ^ x
+         *     f(x) = abˣ
          * </pre>
-         * where {@code b} and {@code a} are the coefficient and the base,
+         * where {@code a} and {@code b} are the coefficient and the base,
          * respectively.
          *
          * @param componentType the array component type
@@ -302,10 +463,8 @@ public class Recyclers {
          * </pre>
          */
         @Contract(value = "_ -> new", pure = true)
-        @NotNull
         @Override
         public T[] get(final int x) {
-            // y = b * a ^ x
             final int bucketSize = coefficient * (int) Math.pow(base, x);
             //noinspection unchecked
             return (T[]) Array.newInstance(componentType, bucketSize);
@@ -313,8 +472,11 @@ public class Recyclers {
     }
 
     /**
-     * Exponential producer of bucket arrays for a {@link RecyclerStack}. The
-     * length of produced arrays will increase linearly.
+     * Linear producer of bucket arrays for a {@link RecyclerStack}. The
+     * length of produced arrays is calculated as
+     * <pre>
+     *     f(x) = ax + b
+     * </pre>
      *
      * @param <T> the element type
      */
@@ -327,65 +489,63 @@ public class Recyclers {
         @NotNull
         public final Class<T> componentType;
         /**
-         * The coefficient when calculating the array length. Equal to
-         * {@code b} in the expression
+         * The slope (coefficient) when calculating the array length. Equal to
+         * {@code a} in
          * <pre>
-         *     y = b + a * x
+         *     f(x) = ax + b
          * </pre>
-         * where {@code y} is the array length.
-         */
-        public final int coefficient;
-        /**
-         * The slope when calculating the array length. Equal to {@code a} in
-         * the expression
-         * <pre>
-         *     y = b + a * x
-         * </pre>
-         * where {@code y} is the array length.
+         * where the result of {@code f(x)} is the array length.
          */
         public final int slope;
+        /**
+         * The intercept when calculating the array length. Equal to {@code b}
+         * in
+         * <pre>
+         *     f(x) = ax + b
+         * </pre>
+         * where the result of {@code f(x)} is the array length. The length of
+         * the first array will be equal to this value.
+         */
+        public final int intercept;
 
         /**
-         * Constructs a new producer that returns arrays which grow linearly.
-         * Given a parameter {@code x}, the array length {@code y} is defined
-         * as
+         * Constructs a new producer that returns arrays increasing linearly in
+         * size. Given a parameter {@code x}, the array length is calculated as
          * <pre>
-         *     y = b + a * x
+         *     f(x) = ax + b
          * </pre>
-         * where {@code b} and {@code a} are the coefficient and the slope,
+         * where {@code a} and {@code b} are the slope and the intercept
          * respectively.
          *
          * @param componentType the array component type
-         * @param coefficient   The coefficient when calculating the array
-         *                      length
          * @param slope         The slope when calculating the array length
+         * @param intercept     The intercept when calculating the array
+         *                      length
          * @throws NullPointerException     if {@code componentType} is
          *                                  {@code null}
-         * @throws IllegalArgumentException if {@code coefficient < 1} or
-         *                                  {@code slope < 1}
+         * @throws IllegalArgumentException if {@code slope < 1} or
+         *                                  {@code intercept < 1}
          */
-        public LinearProducer(@NotNull final Class<T> componentType, final int coefficient, final int slope) {
+        public LinearProducer(@NotNull final Class<T> componentType, final int slope, final int intercept) {
             this.componentType = Objects.requireNonNull(componentType, "componentType is null");
-            if (coefficient < 1)
-                throw new IllegalArgumentException("coefficient is less than 1");
             if (slope < 1)
-                throw new IllegalArgumentException("base is less than 1");
-            this.coefficient = coefficient;
+                throw new IllegalArgumentException("slope is less than 1");
+            if (intercept < 1)
+                throw new IllegalArgumentException("intercept is less than 1");
             this.slope = slope;
+            this.intercept = intercept;
         }
 
         /**
          * Returns a new array with a length equal to
          * <pre>
-         *     coefficient + slope * x
+         *     slope * x + intercept
          * </pre>
          */
         @Contract(value = "_ -> new", pure = true)
-        @NotNull
         @Override
         public T[] get(final int x) {
-            // y = b + a * x
-            final int bucketSize = coefficient + slope * x;
+            final int bucketSize = slope * x + intercept;
             //noinspection unchecked
             return (T[]) Array.newInstance(componentType, bucketSize);
         }
