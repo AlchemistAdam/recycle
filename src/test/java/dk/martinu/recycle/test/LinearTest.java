@@ -17,6 +17,8 @@
 
 package dk.martinu.recycle.test;
 
+import org.junit.jupiter.api.DisplayName;
+
 import java.util.function.Supplier;
 
 import dk.martinu.recycle.Recyclers;
@@ -25,8 +27,10 @@ import dk.martinu.recycle.RetentionPolicy;
 /**
  * Test class for linear recyclers.
  *
- * @see Recyclers#createLinear(Class, RetentionPolicy, Supplier)
+ * @see Recyclers#createConstant(Class, RetentionPolicy, Supplier)
  */
+// TODO
+@DisplayName("Linear Test")
 public final class LinearTest {
 
 

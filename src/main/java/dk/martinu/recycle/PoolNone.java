@@ -53,6 +53,7 @@ public class PoolNone implements RetentionPolicy {
     /**
      * Private constructor for singleton pattern.
      */
+    @Contract(pure = true)
     private PoolNone() { }
 
     /**

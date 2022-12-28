@@ -52,6 +52,7 @@ public class PoolAny implements RetentionPolicy {
     /**
      * Private constructor for singleton pattern.
      */
+    @Contract(pure = true)
     private PoolAny() { }
 
     /**

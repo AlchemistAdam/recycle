@@ -44,6 +44,7 @@ public class PoolMax implements RetentionPolicy {
      * @param size maximum number of elements that can be retained
      * @throws IllegalArgumentException if {@code size < 1}
      */
+    @Contract(pure = true)
     public PoolMax(final int size) {
         if (size < 1)
             throw new IllegalArgumentException("size is less than 1 {" + size + "}");

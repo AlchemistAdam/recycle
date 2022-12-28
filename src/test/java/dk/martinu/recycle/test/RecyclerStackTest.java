@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test class for recycler stacks.
  */
-@DisplayName("RecyclerStack")
+@DisplayName("RecyclerStack Test")
 public class RecyclerStackTest {
 
     @ParameterizedTest

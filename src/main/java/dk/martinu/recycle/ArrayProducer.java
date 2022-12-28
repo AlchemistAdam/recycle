@@ -17,8 +17,6 @@
 
 package dk.martinu.recycle;
 
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Functional interface that returns an array with a component type {@code T}.
  *
@@ -29,6 +27,5 @@ import org.jetbrains.annotations.NotNull;
 @FunctionalInterface
 public interface ArrayProducer<T> {
 
-    @NotNull
     T[] get(final int x);
 }

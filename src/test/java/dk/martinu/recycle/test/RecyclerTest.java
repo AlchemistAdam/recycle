@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
  * Test class for recyclers.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DisplayName("Recycler")
+@DisplayName("Recycler Test")
 public class RecyclerTest {
 
     @ParameterizedTest
