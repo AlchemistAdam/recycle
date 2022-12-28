@@ -45,9 +45,9 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is empty after clear")
     void emptyAfterClear(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
-        recycler.free(0);
-        recycler.free(0);
+        recycler.retain(0);
+        recycler.retain(0);
+        recycler.retain(0);
         assertNotEquals(0, recycler.size());
 
         recycler.clear();
@@ -58,9 +58,9 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is empty after clear (limited bucket size)")
     void emptyAfterClear_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
-        recycler.free(0);
-        recycler.free(0);
+        recycler.retain(0);
+        recycler.retain(0);
+        recycler.retain(0);
         assertNotEquals(0, recycler.size());
 
         recycler.clear();
@@ -71,9 +71,9 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("can get values from stack")
     void getFromStack(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
-        recycler.free(1);
-        recycler.free(2);
+        recycler.retain(0);
+        recycler.retain(1);
+        recycler.retain(2);
 
         assertEquals(2, recycler.get());
         assertEquals(1, recycler.get());
@@ -84,9 +84,9 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("can get values from stack (limited bucket size)")
     void getFromStack_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
-        recycler.free(1);
-        recycler.free(2);
+        recycler.retain(0);
+        recycler.retain(1);
+        recycler.retain(2);
 
         assertEquals(2, recycler.get());
         assertEquals(1, recycler.get());
@@ -114,13 +114,13 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is not empty after pushing elements")
     void notEmpty(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(1, recycler.size());
 
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(2, recycler.size());
 
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(3, recycler.size());
     }
 
@@ -128,13 +128,13 @@ public class RecyclerTest {
     @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is not empty after pushing elements (limited bucket size)")
     void notEmpty_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(1, recycler.size());
 
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(2, recycler.size());
 
-        recycler.free(0);
+        recycler.retain(0);
         assertEquals(3, recycler.size());
     }
 

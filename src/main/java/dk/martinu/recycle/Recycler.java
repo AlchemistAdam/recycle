@@ -17,8 +17,7 @@
 
 package dk.martinu.recycle;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.*;
 
 import java.util.Objects;
 
@@ -29,11 +28,11 @@ import java.util.Objects;
  * pop an element when the collection is empty. Instead of throwing an
  * exception or returning a default value, recyclers delegate the task of
  * returning a value elsewhere. The push and pop operations of a recycler are
- * named {@code free} and {@code get} respectively.
+ * named {@code retain} and {@code get} respectively.
  * <p>
  * Recyclers are, as the name implies, meant to be used as a collection of
- * reusable and short-lived objects to reduce memory upkeep by using the same
- * objects multiple times instead of creating new ones.
+ * reusable and short-lived objects to reduce memory upkeep by reusing objects
+ * multiple times instead of creating new ones.
  * <p>
  * The following example demonstrates how to use a {@code Recycler}:
  * <pre>
@@ -46,14 +45,14 @@ import java.util.Objects;
  *     // do something with point here
  *     ...
  *
- *     // recycle point object so it can be reused
- *     recycler.free(point);
+ *     // retain point object so it can be reused
+ *     recycler.retain(point);
  * </pre>
- * Note that it is perfectly legal to free objects that where not retrieved
+ * Note that it is perfectly legal to retain objects that where not retrieved
  * from a recycler with {@code get()}, in some cases it might even be
- * preferable to do so. It is, however, highly recommended freeing all objects
- * retrieved from a recycler as they would otherwise get garbage collected, and
- * thus defeat the purpose of a recycler.
+ * preferable to do so. It is, however, highly recommended retaining all
+ * objects retrieved from a recycler as they would otherwise get garbage
+ * collected, and thus defeat the purpose of a recycler.
  *
  * @param <T> the element type
  * @author Adam Martinu
@@ -68,40 +67,36 @@ public interface Recycler<T> {
     void clear();
 
     /**
-     * Marks the specified element as recycled, meaning it is no longer in use
-     * and is free to be reused.
-     *
-     * @param element the object to recycle
-     */
-    void free(T element);
-
-    // DOC
-    // TEST
-    default void free(final T[] array) {
-        Objects.requireNonNull(array, "array is null");
-        free(array, array.length);
-    }
-
-    // DOC
-    // TEST
-    void free(final T[] array, final int n);
-
-    /**
      * Returns a potentially recycled element.
      */
     T get();
 
-    // DOC
+    /**
+     * Fills the specified array with potentially recycled elements and returns
+     * it.
+     *
+     * @param array the array to fill
+     * @return the array passed to this method
+     * @throws NullPointerException if {@code array} is {@code null}
+     */
     // TEST
-    @Contract(value = "_ -> param1", mutates = "param1")
+    @Contract(value = "null -> fail; _ -> param1", mutates = "param1")
     default T[] get(final T[] array) {
         Objects.requireNonNull(array, "array is null");
         return get(array, array.length);
     }
 
-    // DOC
+    /**
+     * Fills the specified array with {@code n} potentially recycled elements
+     * and returns it.
+     *
+     * @param array the array to fill
+     * @param n     the number of elements to get
+     * @return the array passed to this method
+     * @throws NullPointerException if {@code array} is {@code null}
+     */
     // TEST
-    @Contract(value = "_, _ -> param1", mutates = "param1")
+    @Contract(value = "null, _ -> fail; _, _ -> param1", mutates = "param1")
     T[] get(final T[] array, final int n);
 
     /**
@@ -115,8 +110,40 @@ public interface Recycler<T> {
     RecyclerStack<?> getStack();
 
     /**
-     * Returns the number of available elements in the recycler.
+     * Retains all elements in the specified array.
+     *
+     * @param array array of elements to retain
+     * @throws NullPointerException if {@code array} is {@code null}
+     */
+    // TEST
+    @Contract(value = "null -> fail")
+    default void retain(final T[] array) {
+        Objects.requireNonNull(array, "array is null");
+        retain(array, array.length);
+    }
+
+    /**
+     * Retains {@code n} elements from the specified array.
+     *
+     * @param array array of elements to retain
+     * @param n     number of elements to retain
+     * @throws NullPointerException if {@code array} is {@code null}
+     */
+    // TEST
+    @Contract(value = "null, _ -> fail")
+    void retain(final T[] array, final int n);
+
+    /**
+     * Retains the specified element so it can be reused.
+     *
+     * @param element the object to retain
+     */
+    void retain(T element);
+
+    /**
+     * Returns the number of retained elements in the recycler.
      */
     @Contract(pure = true)
+    @Range(from = 0, to = Integer.MAX_VALUE)
     int size();
 }

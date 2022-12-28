@@ -78,26 +78,6 @@ public class DefaultRecycler<T> implements Recycler<T> {
      * {@inheritDoc}
      */
     @Override
-    public void free(final T element) {
-        synchronized (stack) {
-            stack.push(element);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void free(final T[] array, final int n) {
-        synchronized (stack) {
-            stack.push(array, n);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public T get() {
         synchronized (stack) {
             if (stack.isEmpty())
@@ -132,6 +112,26 @@ public class DefaultRecycler<T> implements Recycler<T> {
     @Override
     public RecyclerStack<?> getStack() {
         return stack;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void retain(final T[] array, final int n) {
+        synchronized (stack) {
+            stack.push(array, n);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void retain(final T element) {
+        synchronized (stack) {
+            stack.push(element);
+        }
     }
 
     /**

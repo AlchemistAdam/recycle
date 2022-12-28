@@ -42,14 +42,14 @@ import java.util.*;
  *     <li>Number of elements in the recycler stack</li>
  *     <li>Number of buckets in the recycler stack</li>
  *     <li>Number of elements pushed onto the recycler stack with
- *     {@link Recycler#free(Object)} or
- *     {@link Recycler#free(Object[], int)}</li>
+ *     {@link Recycler#retain(Object)} or
+ *     {@link Recycler#retain(Object[], int)}</li>
  *     <li>Number of elements popped from the recycler stack with
  *     {@link Recycler#get()} or {@link Recycler#get(Object[], int)}</li>
  *     <li>Number of elements that were recycled</li>
  * </ol>
  * The constant array indices {@code N_ELEMENTS}, {@code N_BUCKETS},
- * {@code N_FREE}, {@code N_GET} and {@code N_RECYCLED} can be used to access
+ * {@code N_RETAIN}, {@code N_GET} and {@code N_RECYCLED} can be used to access
  * these numbers from the snapshot array.
  * <p>
  * This implementation is thread safe and can be used concurrently.
@@ -75,13 +75,13 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     public static final int N_BUCKETS = 1;
     /**
      * Array index to retrieve the number of elements pushed onto the recycler
-     * stack with {@link Recycler#free(Object)} or
-     * {@link Recycler#free(Object[], int)}.
+     * stack with {@link Recycler#retain(Object)} or
+     * {@link Recycler#retain(Object[], int)}.
      *
      * @see #createSnapshot()
      * @see #getSnapshots()
      */
-    public static final int N_FREE = 2;
+    public static final int N_RETAIN = 2;
     /**
      * Array index to retrieve the number of elements popped from the recycler
      * stack with {@link Recycler#get()} or
@@ -164,9 +164,9 @@ public class Profiler<T> extends Thread implements Recycler<T> {
 
     /**
      * Creates a snapshot and returns it. The constant array indices
-     * {@code N_ELEMENTS}, {@code N_BUCKETS}, {@code N_FREE}, {@code N_GET} and
-     * {@code N_RECYCLED} can be used to access the numbers from the snapshot
-     * array.
+     * {@code N_ELEMENTS}, {@code N_BUCKETS}, {@code N_RETAIN}, {@code N_GET}
+     * and {@code N_RECYCLED} can be used to access the numbers from the
+     * snapshot array.
      * <p>
      * <b>NOTE:</b> this method should only be used when snapshot captures by
      * this profiler is disabled ({@code timeMs} is set to {@code 0}) and
@@ -178,30 +178,6 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     @Contract(value = "-> new")
     public synchronized int[] createSnapshot() {
         return session.createSnapshot();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void free(final T element) {
-        synchronized (recycler) {
-            recycler.free(element);
-            session.incrementFree();
-        }
-        startIfNew();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void free(final T[] array, final int n) {
-        synchronized (recycler) {
-            recycler.free(array, n);
-            session.incrementFreeArray();
-        }
-        startIfNew();
     }
 
     /**
@@ -235,8 +211,9 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     /**
      * Returns an unmodifiable list that reads through to this profiler's list
      * of snapshots. The constant array indices {@code N_ELEMENTS},
-     * {@code N_BUCKETS}, {@code N_FREE}, {@code N_GET} and {@code N_RECYCLED}
-     * can be used to access the numbers from the snapshot array.
+     * {@code N_BUCKETS}, {@code N_RETAIN}, {@code N_GET} and
+     * {@code N_RECYCLED} can be used to access the numbers from the snapshot
+     * array.
      * <p>
      * <b>NOTE:</b> the backing list is updated asynchronously when new
      * snapshots are captured, and as such access to the returned list should
@@ -256,6 +233,30 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     @Override
     public RecyclerStack<?> getStack() {
         return recycler.getStack();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void retain(final T element) {
+        synchronized (recycler) {
+            recycler.retain(element);
+            session.incrementRetain();
+        }
+        startIfNew();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void retain(final T[] array, final int n) {
+        synchronized (recycler) {
+            recycler.retain(array, n);
+            session.incrementRetainArray();
+        }
+        startIfNew();
     }
 
     /**
@@ -336,11 +337,11 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         protected int nBuckets;
         /**
          * Number of elements pushed onto the recycler stack with
-         * {@link Recycler#free(Object)} or
-         * {@link Recycler#free(Object[], int)} since the last snapshot was
+         * {@link Recycler#retain(Object)} or
+         * {@link Recycler#retain(Object[], int)} since the last snapshot was
          * taken.
          */
-        protected int nFree;
+        protected int nRetain;
         /**
          * Number of elements popped from the recycler stack with
          * {@link Recycler#get()} or {@link Recycler#get(Object[], int)} since
@@ -388,68 +389,13 @@ public class Profiler<T> extends Thread implements Recycler<T> {
             final int[] rv = new int[5];
             rv[N_ELEMENTS] = nElements;
             rv[N_BUCKETS] = nBuckets;
-            rv[N_FREE] = nFree;
+            rv[N_RETAIN] = nRetain;
             rv[N_GET] = nGet;
             rv[N_RECYCLED] = nRecycled;
 
-            nFree = nGet = nRecycled = 0;
+            nRetain = nGet = nRecycled = 0;
 
             return rv;
-        }
-
-        /**
-         * Called whenever {@link Profiler#free(Object)} is called.
-         */
-        public synchronized void incrementFree() {
-            // new bucket in stack
-            if (nBuckets != stack.bucketCount) {
-                nFree++;
-                nElements++;
-                nBuckets = stack.bucketCount;
-                cursor = stack.cursor;
-            }
-            // new cursor position in same bucket
-            else if (cursor != stack.cursor) {
-                nFree++;
-                nElements++;
-                cursor = stack.cursor;
-            }
-        }
-
-        /**
-         * Called whenever {@link Profiler#free(Object[], int)} is called.
-         */
-        public synchronized void incrementFreeArray() {
-            // new bucket(s) in stack
-            if (nBuckets != stack.bucketCount) {
-                int pushCount = 0;
-
-                // temporary bucket variable
-                RecyclerStack.Bucket<?> bucket = stack.bucket;
-
-                // follow links until bucket var is equal to last known bucket
-                for (int i = stack.bucketCount; i > nBuckets; i--) {
-                    //noinspection ConstantConditions
-                    pushCount += bucket.array.length;
-                    bucket = bucket.next;
-                }
-
-                //noinspection ConstantConditions
-                pushCount += bucket.array.length - cursor;
-
-                nFree += pushCount;
-                nElements += pushCount;
-                nBuckets = stack.bucketCount;
-                cursor = stack.cursor;
-            }
-            // new cursor position in same bucket
-            else if (cursor != stack.cursor) {
-                final int pushCount = stack.cursor - cursor;
-
-                nFree += pushCount;
-                nElements += pushCount;
-                cursor = stack.cursor;
-            }
         }
 
         /**
@@ -479,6 +425,61 @@ public class Profiler<T> extends Thread implements Recycler<T> {
                 nRecycled += popCount;
                 nElements -= popCount;
                 nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+        }
+
+        /**
+         * Called whenever {@link Profiler#retain(Object)} is called.
+         */
+        public synchronized void incrementRetain() {
+            // new bucket in stack
+            if (nBuckets != stack.bucketCount) {
+                nRetain++;
+                nElements++;
+                nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+            // new cursor position in same bucket
+            else if (cursor != stack.cursor) {
+                nRetain++;
+                nElements++;
+                cursor = stack.cursor;
+            }
+        }
+
+        /**
+         * Called whenever {@link Profiler#retain(Object[], int)} is called.
+         */
+        public synchronized void incrementRetainArray() {
+            // new bucket(s) in stack
+            if (nBuckets != stack.bucketCount) {
+                int pushCount = 0;
+
+                // temporary bucket variable
+                RecyclerStack.Bucket<?> bucket = stack.bucket;
+
+                // follow links until bucket var is equal to last known bucket
+                for (int i = stack.bucketCount; i > nBuckets; i--) {
+                    //noinspection ConstantConditions
+                    pushCount += bucket.array.length;
+                    bucket = bucket.next;
+                }
+
+                //noinspection ConstantConditions
+                pushCount += bucket.array.length - cursor;
+
+                nRetain += pushCount;
+                nElements += pushCount;
+                nBuckets = stack.bucketCount;
+                cursor = stack.cursor;
+            }
+            // new cursor position in same bucket
+            else if (cursor != stack.cursor) {
+                final int pushCount = stack.cursor - cursor;
+
+                nRetain += pushCount;
+                nElements += pushCount;
                 cursor = stack.cursor;
             }
         }
