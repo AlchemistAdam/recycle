@@ -26,8 +26,8 @@ import java.util.*;
 
 /**
  * Utility class to profile {@link Recycler} instances. This class implements
- * {@code Recycler} itself and simply delegates method calls to the recycler
- * being profiled. To profile a recycler, simply wrap it in a profiler:
+ * {@code Recycler} itself and delegates method calls to the recycler being
+ * profiled. To profile a recycler, simply wrap it in a profiler:
  * <pre>
  *     Recycler r = new Profiler(new MyRecycler());
  * </pre>
@@ -41,13 +41,18 @@ import java.util.*;
  * <ol start=0>
  *     <li>Number of elements in the recycler stack</li>
  *     <li>Number of buckets in the recycler stack</li>
- *     <li>Number of times {@link Recycler#free(Object)} was called</li>
- *     <li>Number of times {@link Recycler#get()} was called</li>
+ *     <li>Number of elements pushed onto the recycler stack with
+ *     {@link Recycler#free(Object)} or
+ *     {@link Recycler#free(Object[], int)}</li>
+ *     <li>Number of elements popped from the recycler stack with
+ *     {@link Recycler#get()} or {@link Recycler#get(Object[], int)}</li>
  *     <li>Number of elements that were recycled</li>
  * </ol>
  * The constant array indices {@code N_ELEMENTS}, {@code N_BUCKETS},
  * {@code N_FREE}, {@code N_GET} and {@code N_RECYCLED} can be used to access
  * these numbers from the snapshot array.
+ * <p>
+ * This implementation is thread safe and can be used concurrently.
  *
  * @author Adam Martinu
  * @since 1.0
@@ -69,23 +74,25 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      */
     public static final int N_BUCKETS = 1;
     /**
-     * Array index to retrieve the number of times
-     * {@link Recycler#free(Object)} was called.
+     * Array index to retrieve the number of elements pushed onto the recycler
+     * stack with {@link Recycler#free(Object)} or
+     * {@link Recycler#free(Object[], int)}.
      *
      * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_FREE = 2;
     /**
-     * Array index to retrieve the number of times {@link Recycler#get()} was
-     * called.
+     * Array index to retrieve the number of elements popped from the recycler
+     * stack with {@link Recycler#get()} or
+     * {@link Recycler#get(Object[], int)}.
      *
      * @see #createSnapshot()
      * @see #getSnapshots()
      */
     public static final int N_GET = 3;
     /**
-     * Array index to retrieve the number of times an element was recycled.
+     * Array index to retrieve the number of recycled elements .
      *
      * @see #createSnapshot()
      * @see #getSnapshots()
@@ -291,19 +298,22 @@ public class Profiler<T> extends Thread implements Recycler<T> {
          */
         protected int nBuckets;
         /**
-         * Number of times {@link Recycler#free} was called since the last
-         * snapshot was taken.
+         * Number of elements pushed onto the recycler stack with
+         * {@link Recycler#free(Object)} or
+         * {@link Recycler#free(Object[], int)} since the last snapshot was
+         * taken.
          */
         protected int nFree;
         /**
-         * Number of times {@link Recycler#get()} was called since the last
-         * snapshot was taken.
+         * Number of elements popped from the recycler stack with
+         * {@link Recycler#get()} or {@link Recycler#get(Object[], int)} since
+         * the last snapshot was taken.
          */
         protected int nGet;
         /**
-         * Number of times an element was recycled ({@link Recycler#get()} was
-         * called while the recycler stack had elements) since the last snapshot
-         * was taken.
+         * Number of times an element was recycled ({@link Recycler#get()} or
+         * {@link Recycler#get(Object[], int)} was called while the recycler
+         * stack had elements) since the last snapshot was taken.
          */
         protected int nRecycled;
 
