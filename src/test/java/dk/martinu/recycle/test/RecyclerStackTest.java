@@ -45,7 +45,7 @@ public class RecyclerStackTest {
         stack.push(0);
         stack.push(0);
         assertFalse(stack.isEmpty());
-        assertNotEquals(0, stack.size());
+        assertEquals(3, stack.size());
 
         stack.clear();
         assertTrue(stack.isEmpty());
@@ -60,7 +60,7 @@ public class RecyclerStackTest {
         stack.push(0);
         stack.push(0);
         assertFalse(stack.isEmpty());
-        assertNotEquals(0, stack.size());
+        assertEquals(3, stack.size());
 
         stack.clear();
         assertTrue(stack.isEmpty());
@@ -80,13 +80,20 @@ public class RecyclerStackTest {
     @DisplayName("is not empty after pushing")
     void isNotEmpty(@NotNull final RecyclerStack<Integer> stack) {
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(1, stack.size());
 
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(2, stack.size());
 
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(3, stack.size());
+
+        stack.push(new Integer[] {0, 0, 0, 0}, 4);
+        assertFalse(stack.isEmpty());
+        assertEquals(7, stack.size());
     }
 
     @ParameterizedTest
@@ -94,13 +101,20 @@ public class RecyclerStackTest {
     @DisplayName("is not empty after pushing (limited bucket size)")
     void isNotEmpty_lim(@NotNull final RecyclerStack<Integer> stack) {
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(1, stack.size());
 
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(2, stack.size());
 
         stack.push(0);
+        assertFalse(stack.isEmpty());
         assertEquals(3, stack.size());
+
+        stack.push(new Integer[] {0, 0, 0, 0}, 4);
+        assertFalse(stack.isEmpty());
+        assertEquals(7, stack.size());
     }
 
     @ParameterizedTest
@@ -116,6 +130,42 @@ public class RecyclerStackTest {
         assertEquals(1, stack.pop());
         assertEquals(0, stack.pop());
         assertTrue(stack.isEmpty());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerStackProvider.class)
+    @DisplayName("can pop array")
+    void popArray(@NotNull final RecyclerStack<Integer> stack) {
+        final Integer[] numbers = {0, 1, 2, 3, 4};
+        final Integer[] rv = new Integer[numbers.length];
+
+        stack.push(numbers, numbers.length);
+        assertFalse(stack.isEmpty());
+
+        assertEquals(numbers.length, stack.pop(rv, rv.length));
+        assertTrue(stack.isEmpty());
+        for (int i = 0; i < rv.length; i++) {
+            final int index = i;
+            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
+        }
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerStackProvider.class)
+    @DisplayName("can pop array (limited bucket size)")
+    void popArray_lim(@NotNull final RecyclerStack<Integer> stack) {
+        final Integer[] numbers = {0, 1, 2, 3, 4};
+        final Integer[] rv = new Integer[numbers.length];
+
+        stack.push(numbers, numbers.length);
+        assertFalse(stack.isEmpty());
+
+        assertEquals(numbers.length, stack.pop(rv, rv.length));
+        assertTrue(stack.isEmpty());
+        for (int i = 0; i < rv.length; i++) {
+            final int index = i;
+            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
+        }
     }
 
     @ParameterizedTest
@@ -147,6 +197,22 @@ public class RecyclerStackTest {
         stack.push(0);
         stack.push(0);
         stack.push(0);
+        assertFalse(stack.isEmpty());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerStackProvider.class)
+    @DisplayName("can push array")
+    void pushArray(@NotNull final RecyclerStack<Integer> stack) {
+        stack.push(new Integer[] {0, 0, 0, 0}, 4);
+        assertFalse(stack.isEmpty());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerStackProvider.class)
+    @DisplayName("can push array (limited bucket size)")
+    void pushArray_lim(@NotNull final RecyclerStack<Integer> stack) {
+        stack.push(new Integer[] {0, 0, 0, 0}, 4);
         assertFalse(stack.isEmpty());
     }
 
