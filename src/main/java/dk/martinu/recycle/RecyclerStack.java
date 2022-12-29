@@ -155,7 +155,6 @@ public class RecyclerStack<T> {
      * @param n     number of elements to pop
      * @return the number of popped elements
      */
-    // TEST
     @Contract(mutates = "param1")
     public int pop(final T[] array, int n) {
         assert n <= array.length;
@@ -183,6 +182,7 @@ public class RecyclerStack<T> {
 
                 // copy (pop) all bucket elements
                 System.arraycopy(bucket.array, 0, array, nInitial - n, cursor);
+                index += cursor;
 
                 // decrease remaining pop count
                 n -= cursor;
@@ -248,7 +248,6 @@ public class RecyclerStack<T> {
      * @param array the array containing elements to push
      * @param n     number of elements to push
      */
-    // TEST
     public void push(final T[] array, int n) {
         assert n <= array.length;
 
