@@ -158,8 +158,6 @@ public class RecyclerStack<T> {
     @Contract(mutates = "param1")
     public int pop(final T[] array, int n) {
         assert n <= array.length;
-
-        final int nInitial = n;
         int index = 0;
 
         // iterate all buckets for n > 0
@@ -181,7 +179,7 @@ public class RecyclerStack<T> {
             if (n > cursor && bucket.next != null) {
 
                 // copy (pop) all bucket elements
-                System.arraycopy(bucket.array, 0, array, nInitial - n, cursor);
+                System.arraycopy(bucket.array, 0, array, index, cursor);
                 index += cursor;
 
                 // decrease remaining pop count
@@ -211,13 +209,11 @@ public class RecyclerStack<T> {
             }
         }
 
-        final int popCount = nInitial - n;
-
         // notify retention policy
-        if (popCount > 0)
-            policy.onPop(popCount);
+        if (index > 0)
+            policy.onPop(index);
 
-        return popCount;
+        return index;
     }
 
     /**
