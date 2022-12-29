@@ -79,7 +79,6 @@ public interface Recycler<T> {
      * @return the array passed to this method
      * @throws NullPointerException if {@code array} is {@code null}
      */
-    // TEST
     @Contract(value = "null -> fail; _ -> param1", mutates = "param1")
     default T[] get(final T[] array) {
         Objects.requireNonNull(array, "array is null");
@@ -95,7 +94,6 @@ public interface Recycler<T> {
      * @return the array passed to this method
      * @throws NullPointerException if {@code array} is {@code null}
      */
-    // TEST
     @Contract(value = "null, _ -> fail; _, _ -> param1", mutates = "param1")
     T[] get(final T[] array, final int n);
 
@@ -115,7 +113,6 @@ public interface Recycler<T> {
      * @param array array of elements to retain
      * @throws NullPointerException if {@code array} is {@code null}
      */
-    // TEST
     @Contract(value = "null -> fail")
     default void retain(final T[] array) {
         Objects.requireNonNull(array, "array is null");
@@ -129,7 +126,6 @@ public interface Recycler<T> {
      * @param n     number of elements to retain
      * @throws NullPointerException if {@code array} is {@code null}
      */
-    // TEST
     @Contract(value = "null, _ -> fail")
     void retain(final T[] array, final int n);
 
