@@ -31,8 +31,7 @@ import java.util.stream.Stream;
 import dk.martinu.recycle.Recycler;
 import dk.martinu.recycle.Recyclers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for recyclers.
@@ -65,6 +64,40 @@ public class RecyclerTest {
 
         recycler.clear();
         assertEquals(0, recycler.size());
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerProvider.class)
+    @DisplayName("can get array of values from stack")
+    void getArrayFromStack(@NotNull final Recycler<Integer> recycler) {
+        final Integer[] numbers = {0, 1, 2, 3};
+        final Integer[] rv = new Integer[numbers.length];
+
+        recycler.retain(numbers);
+
+        recycler.get(rv);
+        assertEquals(0, recycler.size());
+        for (int i = 0; i < rv.length; i++) {
+            final int index = i;
+            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
+        }
+    }
+
+    @ParameterizedTest
+    @ArgumentsSource(RecyclerProvider.class)
+    @DisplayName("can get array of values from stack (limited bucket size)")
+    void getArrayFromStack_lim(@NotNull final Recycler<Integer> recycler) {
+        final Integer[] numbers = {0, 1, 2, 3};
+        final Integer[] rv = new Integer[numbers.length];
+
+        recycler.retain(numbers);
+
+        recycler.get(rv);
+        assertEquals(0, recycler.size());
+        for (int i = 0; i < rv.length; i++) {
+            final int index = i;
+            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
+        }
     }
 
     @ParameterizedTest
@@ -112,7 +145,7 @@ public class RecyclerTest {
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("is not empty after pushing elements")
+    @DisplayName("is not empty after retaining elements")
     void notEmpty(@NotNull final Recycler<Integer> recycler) {
         recycler.retain(0);
         assertEquals(1, recycler.size());
@@ -122,11 +155,14 @@ public class RecyclerTest {
 
         recycler.retain(0);
         assertEquals(3, recycler.size());
+
+        recycler.retain(new Integer[] {0, 0, 0, 0});
+        assertEquals(7, recycler.size());
     }
 
     @ParameterizedTest
     @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("is not empty after pushing elements (limited bucket size)")
+    @DisplayName("is not empty after retaining elements (limited bucket size)")
     void notEmpty_lim(@NotNull final Recycler<Integer> recycler) {
         recycler.retain(0);
         assertEquals(1, recycler.size());
