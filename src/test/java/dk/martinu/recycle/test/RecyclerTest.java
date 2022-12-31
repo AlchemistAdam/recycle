@@ -17,16 +17,16 @@
 
 package dk.martinu.recycle.test;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
+import org.junit.jupiter.params.converter.*;
+import org.junit.jupiter.params.provider.CsvSource;
 
+import java.lang.annotation.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import dk.martinu.recycle.Recycler;
 import dk.martinu.recycle.Recyclers;
@@ -40,113 +40,120 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("Recycler Test")
 public class RecyclerTest {
 
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is empty after clear")
-    void emptyAfterClear(@NotNull final Recycler<Integer> recycler) {
+    @ParameterizedTest
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void emptyAfterClear(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
+        // push elements
         recycler.retain(0);
         recycler.retain(0);
         recycler.retain(0);
-        assertNotEquals(0, recycler.size());
 
+        // pop all
         recycler.clear();
         assertEquals(0, recycler.size());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("is empty after clear (limited bucket size)")
-    void emptyAfterClear_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.retain(0);
-        recycler.retain(0);
-        recycler.retain(0);
-        assertNotEquals(0, recycler.size());
-
-        recycler.clear();
-        assertEquals(0, recycler.size());
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("can get array of values from stack")
-    void getArrayFromStack(@NotNull final Recycler<Integer> recycler) {
+    @ParameterizedTest
+    @CsvSource({
+            "-1, def", // negative
+            " 6, def", // greater than array.length
+            // default
+            "0, def",
+            "2, def",
+            "4, def",
+            // limited
+            "0, lim",
+            "2, lim",
+            "4, lim",
+    })
+    void getArrayFromStack(final int n, @NotNull @RecyclerValue final Recycler<Integer> recycler) {
         final Integer[] numbers = {0, 1, 2, 3};
-        final Integer[] rv = new Integer[numbers.length];
+        final Integer[] array = new Integer[numbers.length];
+        final int popCount = Math.min(numbers.length, Math.max(n, 0));
 
+        // push and pop
         recycler.retain(numbers);
+        recycler.get(array, n);
 
-        recycler.get(rv);
-        assertEquals(0, recycler.size());
-        for (int i = 0; i < rv.length; i++) {
-            final int index = i;
-            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
-        }
+        // assert correct number of elements are popped from recycler stack
+        assertEquals(numbers.length - popCount, recycler.size());
+
+        // assert array contains elements in pop range
+        for (int i = 0; i < popCount; i++)
+            assertNotNull(array[i], String.format("null element at index [%1$d]", i));
+
+        // assert array contains null outside of pop range
+        for (int i = popCount; i < array.length; i++)
+            assertNull(array[i], String.format("not null element at index [%1$d]", i));
     }
 
+    @DisplayName("can get values in array from supplier")
     @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("can get array of values from stack (limited bucket size)")
-    void getArrayFromStack_lim(@NotNull final Recycler<Integer> recycler) {
-        final Integer[] numbers = {0, 1, 2, 3};
-        final Integer[] rv = new Integer[numbers.length];
-
-        recycler.retain(numbers);
-
-        recycler.get(rv);
-        assertEquals(0, recycler.size());
-        for (int i = 0; i < rv.length; i++) {
-            final int index = i;
-            assertNotNull(rv[i], () -> String.format("null element at index [%1$d]", index));
-        }
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void getArrayFromSupplier(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
+        assertArrayEquals(new Integer[] {0, 1, 2, 3}, recycler.get(new Integer[4]));
+        assertArrayEquals(new Integer[] {4, 5, null, null}, recycler.get(new Integer[4], 2));
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("can get values from stack")
-    void getFromStack(@NotNull final Recycler<Integer> recycler) {
+    @ParameterizedTest
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void getFromStack(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
+        // push 1 by 1
         recycler.retain(0);
         recycler.retain(1);
         recycler.retain(2);
-
         assertEquals(2, recycler.get());
         assertEquals(1, recycler.get());
         assertEquals(0, recycler.get());
+
+        // push array
+        recycler.retain(new Integer[] {3, 4, 5});
+        assertEquals(5, recycler.get());
+        assertEquals(4, recycler.get());
+        assertEquals(3, recycler.get());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("can get values from stack (limited bucket size)")
-    void getFromStack_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.retain(0);
-        recycler.retain(1);
-        recycler.retain(2);
-
-        assertEquals(2, recycler.get());
-        assertEquals(1, recycler.get());
-        assertEquals(0, recycler.get());
-    }
-
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("can get values from supplier")
-    void getFromSupplier(@NotNull final Recycler<Integer> recycler) {
+    @ParameterizedTest
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void getFromSupplier(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
         assertEquals(0, recycler.get());
         assertEquals(1, recycler.get());
         assertEquals(2, recycler.get());
     }
 
-    @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
     @DisplayName("is empty when new")
-    void isEmpty(@NotNull final Recycler<Integer> recycler) {
+    @ParameterizedTest
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void isEmpty(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
         assertEquals(0, recycler.size());
     }
 
-
+    @DisplayName("can retain elements")
     @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("is not empty after retaining elements")
-    void notEmpty(@NotNull final Recycler<Integer> recycler) {
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void retain(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
         recycler.retain(0);
         assertEquals(1, recycler.size());
 
@@ -158,45 +165,50 @@ public class RecyclerTest {
 
         recycler.retain(new Integer[] {0, 0, 0, 0});
         assertEquals(7, recycler.size());
+
+        recycler.retain(new Integer[] {0, 0, 0, 0}, 2);
+        assertEquals(9, recycler.size());
     }
 
+    @DisplayName("can retain elements from array")
     @ParameterizedTest
-    @ArgumentsSource(RecyclerProvider.class)
-    @DisplayName("is not empty after retaining elements (limited bucket size)")
-    void notEmpty_lim(@NotNull final Recycler<Integer> recycler) {
-        recycler.retain(0);
-        assertEquals(1, recycler.size());
+    @CsvSource({
+            "def",
+            "lim"
+    })
+    void retainArray(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
+        recycler.retain(new Integer[] {0, 0, 0, 0});
+        assertEquals(4, recycler.size());
 
-        recycler.retain(0);
-        assertEquals(2, recycler.size());
-
-        recycler.retain(0);
-        assertEquals(3, recycler.size());
+        recycler.retain(new Integer[] {0, 0, 0, 0}, 2);
+        assertEquals(6, recycler.size());
     }
 
-    /**
-     * {@code Recycler<Integer>} argument provider for test methods.
-     */
-    static class RecyclerProvider implements ArgumentsProvider {
+    @Target({ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
+    @Retention(RetentionPolicy.RUNTIME)
+    @ConvertWith(StringToRecyclerConverter.class)
+    public @interface RecyclerValue { }
 
-        /**
-         * Provides a {@code Recycler} argument with a limited bucket size (1)
-         * if the test method's name ends in {@code "_lim"}, otherwise the
-         * default bucket size is used.
-         *
-         * @see Recyclers#createConstant(Class, Supplier)
-         */
+    @SuppressWarnings("rawtypes") // cannot select from parameterized class
+    public static class StringToRecyclerConverter extends TypedArgumentConverter<String, Recycler> {
+
+        protected StringToRecyclerConverter() {
+            super(String.class, Recycler.class);
+        }
+
+        @Contract(value = "_ -> new", pure = true)
+        @NotNull
         @Override
-        public Stream<? extends Arguments> provideArguments(@NotNull final ExtensionContext context) {
-            final String methodName = context.getTestMethod().orElseThrow().getName();
-            final Recycler<?> recycler;
+        protected Recycler<Integer> convert(final String source) throws ArgumentConversionException {
             final AtomicInteger ai = new AtomicInteger();
-            if (methodName.endsWith("_lim"))
-                recycler = Recyclers.createConstant(Integer.class, 1, ai::getAndIncrement);
-            else
-                recycler = Recyclers.createConstant(Integer.class, ai::getAndIncrement);
-
-            return Stream.of(recycler).map(Arguments::of);
+            return switch (source) {
+                // default
+                case "def" -> Recyclers.createConstant(Integer.class, ai::getAndIncrement);
+                // limited bucket size
+                case "lim" -> Recyclers.createConstant(Integer.class, 1, ai::getAndIncrement);
+                // cannot convert to recycler
+                default -> throw new ArgumentConversionException("invalid recycler source {" + source + "}");
+            };
         }
     }
 }
