@@ -36,6 +36,9 @@ import java.util.function.Supplier;
  * Additionally, each factory method is overloaded to accept a
  * {@link RetentionPolicy} instance to further control how the recycler
  * operates.
+ * <p>
+ * All recyclers created by this factory are thread safe and can be used
+ * concurrently and with {@link RetentionPolicyTimed timed} retention policies.
  *
  * @author Adam Martinu
  * @since 1.0
