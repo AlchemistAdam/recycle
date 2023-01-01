@@ -49,10 +49,9 @@ import java.util.Objects;
  *     recycler.retain(point);
  * </pre>
  * Note that it is perfectly legal to retain objects that where not retrieved
- * from a recycler with {@code get()}, in some cases it might even be
- * preferable to do so. It is, however, highly recommended retaining all
- * objects retrieved from a recycler as they would otherwise get garbage
- * collected, and thus defeat the purpose of a recycler.
+ * from a recycler with {@code get()}. Objects retrieved from a recycler should
+ * always be retained after use. Otherwise, they would get garbage collected,
+ * and thus defeat the purpose of a recycler.
  *
  * @param <T> the element type
  * @author Adam Martinu
