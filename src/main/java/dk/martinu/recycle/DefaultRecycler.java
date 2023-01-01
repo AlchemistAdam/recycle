@@ -92,7 +92,9 @@ public class DefaultRecycler<T> implements Recycler<T> {
      */
     @Contract(value = "_, _ -> param1", mutates = "param1")
     @Override
-    public T[] get(final T[] array, final int n) {
+    public T[] get(final T[] array, int n) {
+        if (n > array.length)
+            n = array.length;
         final int popCount;
         synchronized (stack) {
             popCount = stack.pop(array, n);
