@@ -162,26 +162,28 @@ public class RecyclerTest {
 
         recycler.retain(0);
         assertEquals(3, recycler.size());
-
-        recycler.retain(new Integer[] {0, 0, 0, 0});
-        assertEquals(7, recycler.size());
-
-        recycler.retain(new Integer[] {0, 0, 0, 0}, 2);
-        assertEquals(9, recycler.size());
     }
 
     @DisplayName("can retain elements from array")
     @ParameterizedTest
     @CsvSource({
-            "def",
-            "lim"
+            "-1, def", // negative
+            " 6, def", // greater than array.length
+            // default
+            "0, def",
+            "2, def",
+            "4, def",
+            // limited
+            "0, lim",
+            "2, lim",
+            "4, lim",
     })
-    void retainArray(@NotNull @RecyclerValue final Recycler<Integer> recycler) {
-        recycler.retain(new Integer[] {0, 0, 0, 0});
-        assertEquals(4, recycler.size());
+    void retainArray(final int n, @NotNull @RecyclerValue final Recycler<Integer> recycler) {
+        final Integer[] array = {0, 0, 0, 0};
+        final int pushCount = Math.min(array.length, Math.max(n, 0));
 
-        recycler.retain(new Integer[] {0, 0, 0, 0}, 2);
-        assertEquals(6, recycler.size());
+        recycler.retain(array, n);
+        assertEquals(pushCount, recycler.size());
     }
 
     @Target({ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
