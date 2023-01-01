@@ -157,7 +157,8 @@ public class RecyclerStack<T> {
      */
     @Contract(mutates = "param1")
     public int pop(final T[] array, int n) {
-        assert n <= array.length;
+        if (n > array.length)
+            n = array.length;
         int index = 0;
 
         // iterate all buckets for n > 0
@@ -245,8 +246,8 @@ public class RecyclerStack<T> {
      * @param n     number of elements to push
      */
     public void push(final T[] array, int n) {
-        assert n <= array.length;
-
+        if (n > array.length)
+            n = array.length;
         int pushCount = 0;
         int index = 0;
 
@@ -288,18 +289,37 @@ public class RecyclerStack<T> {
                 bucketCount--;
             }
 
-            // number of elements to remove from bucket
-            final int m = Math.min(cursor, n);
+            /*
+            small optimization that disposes the bucket immediately, instead of
+            stepping through the array and nullifying every element
+             */
+            // pop all elements from this bucket
+            if (n > cursor && bucket.next != null) {
 
-            // remove elements
-            for (int i = cursor - m; i < cursor; i++)
-                bucket.array[i] = null;
+                // decrease remaining remove count
+                n -= cursor;
 
-            // decrease cursor position
-            cursor -= m;
+                // dispose this bucket
+                bucket = bucket.next;
+                cursor = bucket.array.length;
+                bucketCount--;
+            }
 
-            // decrease remove count
-            n -= m;
+            // pop up to n elements from this bucket
+            else {
+                // number of elements to remove from bucket
+                final int m = Math.min(cursor, n);
+
+                // remove elements
+                for (int i = cursor - m; i < cursor; i++)
+                    bucket.array[i] = null;
+
+                // decrease cursor position
+                cursor -= m;
+
+                // decrease remove count
+                n -= m;
+            }
         }
     }
 
