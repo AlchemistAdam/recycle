@@ -87,6 +87,8 @@ public class RecyclerStack<T> {
      */
     public void clear() {
 
+        final boolean didClear = !isEmpty();
+
         // iterate all buckets
         while (cursor != 0 || bucket.next != null) {
 
@@ -103,6 +105,9 @@ public class RecyclerStack<T> {
                 cursor = 0;
             }
         }
+
+        if (didClear)
+            policy.onClear();
     }
 
     /**
