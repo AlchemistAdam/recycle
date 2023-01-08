@@ -58,7 +58,6 @@ import java.util.Objects;
  * @see Recyclers
  * @since 1.0
  */
-// TODO add method to set retention policy
 public interface Recycler<T> {
 
     /**
