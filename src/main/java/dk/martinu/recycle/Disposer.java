@@ -23,11 +23,10 @@ import java.util.Objects;
 import java.util.function.IntUnaryOperator;
 
 /**
- * Daemon {@code Thread} implementation used by retention policies that dispose
- * elements at a fixed time interval.
+ * Daemon {@code Thread} implementation used to dispose elements from a
+ * recycler stack at a fixed time interval.
  *
  * @author Adam Martinu
- * @see RetentionPolicyTimed
  * @since 1.0
  */
 public class Disposer extends Thread {
@@ -51,13 +50,13 @@ public class Disposer extends Thread {
      * Boolean flag that keeps this thread looping  while {@code true}. Set to
      * {@code false} with {@link #terminate()}.
      */
-    protected volatile boolean run = true;
+    protected boolean run = true;
 
     /**
      * Constructs a new {@code Disposer} to dispose elements from the specified
-     * stack. The {@code Disposer} will at least {@code timeMs} between
-     * disposals and use {@code operator} to determine how many elements to
-     * dispose.
+     * stack. The {@code Disposer} will wait at least {@code timeMs} between
+     * disposals and use the specified {@code operator} to determine how many
+     * elements to dispose.
      *
      * @param stack    the stack whose elements will be disposed
      * @param timeMs   time interval between disposals in milliseconds
@@ -84,24 +83,31 @@ public class Disposer extends Thread {
     public void run() {
         long time = System.currentTimeMillis();
         long delta;
-        while (run) {
+        while (true) {
             delta = System.currentTimeMillis() - time;
             if (delta >= timeMs) {
-                // double-check run, might be set to false in RetentionPolicy.uninstall()
-                if (run)
-                    synchronized (stack) {
-                        stack.remove(operator.applyAsInt(stack.size()));
+                synchronized (this) {
+                    if (run) {
+                        synchronized (stack) {
+                            stack.remove(operator.applyAsInt(stack.size()));
+                        }
+                        time = System.currentTimeMillis();
                     }
-                time = System.currentTimeMillis();
+                    else
+                        break;
+                }
             }
             else
                 synchronized (this) {
-                    try {
-                        wait(timeMs - delta);
-                    }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    if (run)
+                        try {
+                            wait(timeMs - delta);
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    else
+                        break;
                 }
         }
     }
@@ -118,7 +124,7 @@ public class Disposer extends Thread {
         synchronized (this) {
             if (run) {
                 run = false;
-                notifyAll();
+                notifyAll(); // wake this thread if sleeping to exit loop early
             }
         }
     }
