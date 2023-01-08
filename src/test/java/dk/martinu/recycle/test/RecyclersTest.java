@@ -17,9 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Test class for factory methods in {@link Recyclers}.
+ * Test class for {@code Recyclers} factory methods.
  */
-public class FactoryTest {
+public class RecyclersTest {
 
     @DisplayName("can create constant")
     @ParameterizedTest
