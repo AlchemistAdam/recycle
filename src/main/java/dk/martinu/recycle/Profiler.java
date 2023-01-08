@@ -313,7 +313,7 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     public void setRetentionPolicy(final @NotNull RetentionPolicy policy) {
         synchronized (recycler) {
             recycler.setRetentionPolicy(policy);
-            // TODO update session because policy install can change size/bucket count
+            session.reset();
         }
     }
 
@@ -520,6 +520,16 @@ public class Profiler<T> extends Thread implements Recycler<T> {
                 nElements += pushCount;
                 cursor = stack.cursor;
             }
+        }
+
+        /**
+         * Resets the element and bucket count to the values returned by the
+         * stack. Called whenever
+         * {@link Profiler#setRetentionPolicy(RetentionPolicy)} is called.
+         */
+        public synchronized void reset() {
+            nElements = stack.size();
+            nBuckets = stack.bucketCount;
         }
     }
 }
