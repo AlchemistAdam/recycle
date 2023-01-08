@@ -58,6 +58,7 @@ import java.util.Objects;
  * @see Recyclers
  * @since 1.0
  */
+// TODO add method to set retention policy
 public interface Recycler<T> {
 
     /**
@@ -134,6 +135,13 @@ public interface Recycler<T> {
      * @param element the object to retain
      */
     void retain(T element);
+
+    /**
+     * Installs the specified policy on this recycler's underlying stack.
+     *
+     * @throws NullPointerException if {@code policy} is {@code null}
+     */
+    void setRetentionPolicy(@NotNull final RetentionPolicy policy);
 
     /**
      * Returns the number of retained elements in the recycler.

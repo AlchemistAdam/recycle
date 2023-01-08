@@ -139,6 +139,16 @@ public class DefaultRecycler<T> implements Recycler<T> {
     /**
      * {@inheritDoc}
      */
+    @Override
+    public void setRetentionPolicy(final @NotNull RetentionPolicy policy) {
+        synchronized (stack) {
+            stack.setRetentionPolicy(policy);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Contract(pure = true)
     @Override
     public int size() {
