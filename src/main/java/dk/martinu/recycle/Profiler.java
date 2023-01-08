@@ -251,6 +251,17 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      * {@inheritDoc}
      */
     @Override
+    public void setRetentionPolicy(final @NotNull RetentionPolicy policy) {
+        synchronized (recycler) {
+            recycler.setRetentionPolicy(policy);
+            // TODO update session because policy install can change size/bucket count
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void retain(final T[] array, final int n) {
         synchronized (recycler) {
             recycler.retain(array, n);
