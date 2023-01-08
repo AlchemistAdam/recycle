@@ -118,6 +118,11 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      */
     @NotNull
     protected final ArrayList<int[]> snapshots = new ArrayList<>(32);
+    /**
+     * Boolean flag that keeps this profiler looping while {@code true}. Set to
+     * {@code false} with {@link #terminate()}.
+     */
+    protected boolean run = true;
 
     /**
      * Constructs a new profiler wrapped around the specified recycler with a
@@ -251,17 +256,6 @@ public class Profiler<T> extends Thread implements Recycler<T> {
      * {@inheritDoc}
      */
     @Override
-    public void setRetentionPolicy(final @NotNull RetentionPolicy policy) {
-        synchronized (recycler) {
-            recycler.setRetentionPolicy(policy);
-            // TODO update session because policy install can change size/bucket count
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void retain(final T[] array, final int n) {
         synchronized (recycler) {
             recycler.retain(array, n);
@@ -284,26 +278,42 @@ public class Profiler<T> extends Thread implements Recycler<T> {
         // difference between current time and timestamp
         long delta;
 
-        // TODO make it possible to stop the profiler
-        //noinspection InfiniteLoopStatement
         while (true) {
             delta = System.currentTimeMillis() - timestamp;
-            if (delta >= timeMs) {
+            if (delta >= timeMs)
                 synchronized (this) {
-                    snapshots.add(session.createSnapshot());
-                }
-                timestamp = System.currentTimeMillis();
-            }
-            // wait remaining time
-            else
-                try {
-                    synchronized (this) {
-                        wait(timeMs - delta);
+                    if (run) {
+                        snapshots.add(session.createSnapshot());
+
+                        timestamp = System.currentTimeMillis();
                     }
+                    else
+                        break;
                 }
-                catch (InterruptedException e) {
-                    e.printStackTrace();
+                // wait remaining time
+            else
+                synchronized (this) {
+                    if (run)
+                        try {
+                            wait(timeMs - delta);
+                        }
+                        catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    else
+                        break;
                 }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setRetentionPolicy(final @NotNull RetentionPolicy policy) {
+        synchronized (recycler) {
+            recycler.setRetentionPolicy(policy);
+            // TODO update session because policy install can change size/bucket count
         }
     }
 
@@ -314,6 +324,23 @@ public class Profiler<T> extends Thread implements Recycler<T> {
     @Override
     public int size() {
         return recycler.size();
+    }
+
+    /**
+     * Terminates this profiler, preventing any snapshots from being captured
+     * after this call. Does nothing if this {@code Profiler} is already
+     * terminated.
+     */
+    public void terminate() {
+        if (!run)
+            return;
+
+        synchronized (this) {
+            if (run) {
+                run = false;
+                notifyAll(); // wake profiler's thread if sleeping to exit loop early
+            }
+        }
     }
 
     /**
