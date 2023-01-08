@@ -47,7 +47,7 @@ public class Disposer extends Thread {
     @NotNull
     public final IntUnaryOperator operator;
     /**
-     * Boolean flag that keeps this thread looping  while {@code true}. Set to
+     * Boolean flag that keeps this thread looping while {@code true}. Set to
      * {@code false} with {@link #terminate()}.
      */
     protected boolean run = true;
@@ -81,22 +81,24 @@ public class Disposer extends Thread {
      */
     @Override
     public void run() {
-        long time = System.currentTimeMillis();
+        // timestamp of the last snapshot
+        long timestamp = System.currentTimeMillis();
+        // difference between current time and timestamp
         long delta;
+
         while (true) {
-            delta = System.currentTimeMillis() - time;
-            if (delta >= timeMs) {
+            delta = System.currentTimeMillis() - timestamp;
+            if (delta >= timeMs)
                 synchronized (this) {
                     if (run) {
                         synchronized (stack) {
                             stack.remove(operator.applyAsInt(stack.size()));
                         }
-                        time = System.currentTimeMillis();
+                        timestamp = System.currentTimeMillis();
                     }
                     else
                         break;
                 }
-            }
             else
                 synchronized (this) {
                     if (run)
