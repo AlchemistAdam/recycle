@@ -117,8 +117,11 @@ public class Recyclers {
      *                      is empty.
      * @param <T>           the element type
      * @return a new recycler with a constant bucket size
-     * @throws NullPointerException if {@code componentType}, {@code policy} or
-     *                              {@code supplier} is {@code null}
+     * @throws IllegalArgumentException if {@code bucketSize} is less than
+     *                                  {@code 1}
+     * @throws NullPointerException     if {@code componentType},
+     *                                  {@code policy} or {@code supplier} is
+     *                                  {@code null}
      */
     @Contract(value = "_, _, _, _ -> new", pure = true)
     @NotNull
